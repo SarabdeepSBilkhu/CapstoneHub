@@ -1,0 +1,223 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  STUDENT
+  SUPERVISOR
+  EXAMINER
+  SPONSOR
+  ADMIN
+}
+
+enum ProjectCategory {
+  INDUSTRY_SPONSORED
+  ACADEMIC_RESEARCH
+  ENTREPRENEURSHIP_CAPSTONE
+}
+
+enum ProjectStatus {
+  PENDING_APPROVAL
+  APPROVED
+  ALLOCATED
+  IN_PROGRESS
+  UNDER_REVIEW
+  COMPLETED
+  ARCHIVED
+}
+
+enum ApplicationStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+}
+
+enum MilestoneStatus {
+  PENDING
+  SUBMITTED
+  UNDER_REVIEW
+  APPROVED
+  REVISION_REQUESTED
+}
+
+enum IPStatus {
+  OPEN_SOURCE
+  CONFIDENTIAL
+  PATENT_PENDING
+  SPONSOR_OWNED
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  name          String
+  passwordHash  String
+  role          Role      @default(STUDENT)
+  department    String?
+  avatarUrl     String?
+  bio           String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relationships
+  teamMemberships TeamMember[]
+  supervisedProjects Project[] @relation("ProjectSupervisor")
+  examinerEvaluations Evaluation[]
+  supervisorLogs SupervisorLog[]
+  sponsorProjects Project[] @relation("ProjectSponsor")
+}
+
+model Project {
+  id               String          @id @default(cuid())
+  title            String
+  description      String
+  problemStatement String
+  objectives       String?
+  requiredSkills   String[]
+  expectedOutcomes String?
+  category         ProjectCategory @default(INDUSTRY_SPONSORED)
+  status           ProjectStatus   @default(PENDING_APPROVAL)
+  ipStatus         IPStatus        @default(CONFIDENTIAL)
+  tags             String[]
+  maxTeamSize      Int             @default(4)
+  applicationDeadline DateTime?
+  
+  // Showcase & Publishing
+  isPublicShowcase Boolean         @default(false)
+  showcaseSummary  String?
+  demoUrl          String?
+  githubUrl        String?
+  similarityScore  Float?          @default(12.0)
+  originalityReportUrl String?
+  
+  // Relations
+  sponsorId        String?
+  sponsor          User?           @relation("ProjectSponsor", fields: [sponsorId], references: [id])
+  supervisorId     String?
+  supervisor       User?           @relation("ProjectSupervisor", fields: [supervisorId], references: [id])
+  
+  allocatedTeamId  String?         @unique
+  allocatedTeam    Team?           @relation("AllocatedProject", fields: [allocatedTeamId], references: [id])
+  
+  applications     ProjectApplication[]
+  milestones       Milestone[]
+  evaluations      Evaluation[]
+  supervisorLogs   SupervisorLog[]
+  resources        Resource[]
+
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+}
+
+model Team {
+  id             String               @id @default(cuid())
+  name           String
+  leaderId       String
+  allocatedProject Project?           @relation("AllocatedProject")
+  members        TeamMember[]
+  applications   ProjectApplication[]
+  createdAt      DateTime             @default(now())
+  updatedAt      DateTime             @updatedAt
+}
+
+model TeamMember {
+  id        String   @id @default(cuid())
+  teamId    String
+  team      Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  isLeader  Boolean  @default(false)
+  joinedAt  DateTime @default(now())
+
+  @@unique([teamId, userId])
+}
+
+model ProjectApplication {
+  id          String            @id @default(cuid())
+  projectId   String
+  project     Project           @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  teamId      String
+  team        Team              @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  proposal    String
+  status      ApplicationStatus @default(PENDING)
+  submittedAt DateTime          @default(now())
+  reviewedAt  DateTime?
+
+  @@unique([projectId, teamId])
+}
+
+model Milestone {
+  id             String          @id @default(cuid())
+  projectId      String
+  project        Project         @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  title          String
+  description    String
+  dueDate        DateTime
+  weightage      Int             @default(20) // out of 100
+  status         MilestoneStatus @default(PENDING)
+  deliverableUrl String?
+  originalityScore Float?
+  feedback       String?
+  submittedAt    DateTime?
+  reviewedAt     DateTime?
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+}
+
+model SupervisorLog {
+  id               String   @id @default(cuid())
+  projectId        String
+  project          Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  supervisorId     String
+  supervisor       User     @relation(fields: [supervisorId], references: [id])
+  meetingDate      DateTime @default(now())
+  attendees        String   @default("Alex Chen, Maya Patel")
+  discussionPoints String
+  problemsIdentified String?
+  decisions        String?
+  actionItems      String
+  nextMeetingDate  DateTime?
+  satisfactionRating Int   @default(5) // 1 to 5 scale
+  createdAt        DateTime @default(now())
+}
+
+model Evaluation {
+  id                   String   @id @default(cuid())
+  projectId            String
+  project              Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  examinerId           String
+  examiner             User     @relation(fields: [examinerId], references: [id])
+  
+  // Standard 6-part Rubric (Total = 100)
+  technicalImplementationScore Float // Max 25
+  problemUnderstandingScore    Float // Max 15
+  innovationScore              Float // Max 15
+  documentationScore           Float // Max 15
+  presentationScore            Float // Max 15
+  projectOutcomeScore          Float // Max 15
+  totalScore                   Float // Max 100
+  
+  comments             String?
+  isSubmitted          Boolean  @default(false)
+  submittedAt          DateTime?
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  @@unique([projectId, examinerId])
+}
+
+model Resource {
+  id          String   @id @default(cuid())
+  projectId   String
+  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  title       String
+  fileUrl     String
+  fileType    String   // "REPORT", "PRESENTATION", "IP_AGREEMENT", "NDA", "SOURCE_CODE"
+  uploadedBy  String
+  uploadedAt  DateTime @default(now())
+}

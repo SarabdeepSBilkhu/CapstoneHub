@@ -1,6 +1,6 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
-# dependencies
+# Dependencies
 /node_modules
 /.pnp
 .pnp.*
@@ -10,32 +10,89 @@
 !.yarn/releases
 !.yarn/versions
 
-# testing
+# Testing & Coverage
 /coverage
+*.lcov
 
-# next.js
+# Next.js build output & cache
 /.next/
 /out/
-
-# production
 /build
 
-# misc
-.DS_Store
-*.pem
-
-# debug
+# Debug & system logs
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
+lerna-debug.log*
+*.log
 
-# env files (can opt-in for committing if needed)
-.env*
+# Operating System files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
 
-# vercel
+# Environment secret files
+.env
+.env*.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.pem
+*.key
+*.cert
+
+# Vercel & Turbo build artifacts
 .vercel
+.turbo
 
-# typescript
+# TypeScript & Next build metadata
 *.tsbuildinfo
 next-env.d.ts
+
+# IDE & Editor folders
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# AI Agent & Assistant cached skill directories
+.agents/
+.claude/
+.cursor/
+.devin/
+
+# Local SQLite / temporary test databases
+*.db
+*.sqlite
+*.sqlite3
+
+AGENTS.md
+DEPLOYMENT.md
+Syllabus.txt
+
+# IDE & Editor folders
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# AI Agent & Assistant cached skill directories
+.agents/
+.claude/
+.cursor/
+.devin/
+
+# Local SQLite / temporary test databases
+*.db
+*.sqlite
+*.sqlite3
