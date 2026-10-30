@@ -90,7 +90,7 @@ export default function EvaluationPage() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-zinc-800 pb-6">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-3xl font-bold tracking-tight text-white">Step 8: Multi-Examiner Evaluation</h1>
+            <h1 className="text-3xl font-bold tracking-tight text-white">Multi-Examiner Evaluation</h1>
             <Badge variant="purple">3 Independent Faculty Evaluators</Badge>
           </div>
           <p className="mt-1 text-sm text-zinc-400">

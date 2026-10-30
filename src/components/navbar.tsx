@@ -65,9 +65,6 @@ export function Navbar({ user }: NavbarProps) {
             </div>
             <div>
               <span className="font-bold text-lg text-white tracking-tight">Capstone<span className="text-indigo-400">Hub</span></span>
-              <span className="hidden sm:inline-block ml-2 text-[10px] font-medium tracking-wide uppercase px-2 py-0.5 rounded bg-zinc-800 text-zinc-400 border border-zinc-700/60">
-                CSE 5th Sem
-              </span>
             </div>
           </Link>
 

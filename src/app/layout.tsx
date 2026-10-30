@@ -28,7 +28,7 @@ export default async function RootLayout({
               <Navbar user={user} />
               <main className="flex-1">{children}</main>
               <footer className="border-t border-zinc-900 py-8 text-center text-xs text-zinc-500">
-                <p>CapstoneHub — 5th Semester B.Tech CSE Course Project</p>
+                <p>CapstoneHub</p>
                 <p className="mt-1">Built with ReactJS, Next.js App Router, Tailwind CSS, Prisma ORM & PostgreSQL</p>
               </footer>
             </div>

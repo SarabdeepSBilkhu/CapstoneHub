@@ -107,7 +107,7 @@ export default function LoginPage() {
           <div className="flex items-center justify-between">
             <span className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-zinc-300">
               <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-              15-Min Live Demo Persona Switcher (1-Click)
+              Live Demo Persona Switcher
             </span>
             <span className="text-[10px] text-zinc-500">Auto-fills credentials</span>
           </div>
@@ -120,7 +120,7 @@ export default function LoginPage() {
               className="flex flex-col p-2.5 rounded-lg bg-zinc-800/50 hover:bg-zinc-800 border border-zinc-700/60 text-left transition-colors cursor-pointer"
             >
               <div className="flex items-center gap-1 text-amber-400 font-semibold mb-1">
-                <Briefcase className="w-3.5 h-3.5" /> Step 1: Sponsor
+                <Briefcase className="w-3.5 h-3.5" /> Sponsor
               </div>
               <p className="font-medium text-white truncate">Elena (Steerpath)</p>
               <p className="text-[10px] text-zinc-400">Post Problem & NDA</p>
@@ -133,7 +133,7 @@ export default function LoginPage() {
               className="flex flex-col p-2.5 rounded-lg bg-zinc-800/50 hover:bg-zinc-800 border border-zinc-700/60 text-left transition-colors cursor-pointer"
             >
               <div className="flex items-center gap-1 text-rose-400 font-semibold mb-1">
-                <ShieldCheck className="w-3.5 h-3.5" /> Step 2: Admin
+                <ShieldCheck className="w-3.5 h-3.5" /> Admin
               </div>
               <p className="font-medium text-white truncate">Dean Arthur Wright</p>
               <p className="text-[10px] text-zinc-400">Approval & Allocations</p>
@@ -146,7 +146,7 @@ export default function LoginPage() {
               className="flex flex-col p-2.5 rounded-lg bg-zinc-800/50 hover:bg-zinc-800 border border-zinc-700/60 text-left transition-colors cursor-pointer"
             >
               <div className="flex items-center gap-1 text-purple-400 font-semibold mb-1">
-                <UserCheck className="w-3.5 h-3.5" /> Step 3: Student
+                <UserCheck className="w-3.5 h-3.5" /> Student
               </div>
               <p className="font-medium text-white truncate">Alex (Team Alpha)</p>
               <p className="text-[10px] text-zinc-400">Submit Deliverables</p>
@@ -159,7 +159,7 @@ export default function LoginPage() {
               className="flex flex-col p-2.5 rounded-lg bg-zinc-800/50 hover:bg-zinc-800 border border-zinc-700/60 text-left transition-colors cursor-pointer"
             >
               <div className="flex items-center gap-1 text-sky-400 font-semibold mb-1">
-                <GraduationCap className="w-3.5 h-3.5" /> Step 6: Supervisor
+                <GraduationCap className="w-3.5 h-3.5" /> Supervisor
               </div>
               <p className="font-medium text-white truncate">Dr. Martinez</p>
               <p className="text-[10px] text-zinc-400">Review & Meeting Logs</p>
@@ -172,7 +172,7 @@ export default function LoginPage() {
               className="flex flex-col p-2.5 rounded-lg bg-zinc-800/50 hover:bg-zinc-800 border border-zinc-700/60 text-left transition-colors cursor-pointer"
             >
               <div className="flex items-center gap-1 text-emerald-400 font-semibold mb-1">
-                <Award className="w-3.5 h-3.5" /> Step 8: Examiner 1
+                <Award className="w-3.5 h-3.5" /> Examiner 1
               </div>
               <p className="font-medium text-white truncate">Prof. Jenkins</p>
               <p className="text-[10px] text-zinc-400">6-Criteria Rubric</p>
@@ -185,7 +185,7 @@ export default function LoginPage() {
               className="flex flex-col p-2.5 rounded-lg bg-zinc-800/50 hover:bg-zinc-800 border border-zinc-700/60 text-left transition-colors cursor-pointer"
             >
               <div className="flex items-center gap-1 text-emerald-400 font-semibold mb-1">
-                <Award className="w-3.5 h-3.5" /> Step 8: Examiner 2
+                <Award className="w-3.5 h-3.5" /> Examiner 2
               </div>
               <p className="font-medium text-white truncate">Dr. Vivek Sharma</p>
               <p className="text-[10px] text-zinc-400">Independent Viva</p>

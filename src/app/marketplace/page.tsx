@@ -63,7 +63,7 @@ export default async function MarketplacePage({ searchParams }: MarketplaceProps
         <div>
           <div className="flex items-center gap-2">
             <h1 className="text-3xl font-bold tracking-tight text-white">Project Marketplace</h1>
-            <Badge variant="purple">Step 3: Discovery & Applications</Badge>
+            <Badge variant="purple">Discovery & Applications</Badge>
           </div>
           <p className="mt-1 text-sm text-zinc-400">
             Explore industry-sponsored problem statements, apply as an engineering cohort, or propose novel capstone research.

@@ -59,8 +59,6 @@ On **`http://localhost:3000/login`**, click any of the 1-click persona buttons f
 
 ## 🎓 100% Curriculum & Syllabus Alignment
 
-This project satisfies all units outlined in the **5th Semester B.Tech CSE Syllabus** ([Syllabus.txt](file:///c:/Users/sanjh/Projects/CapstoneHub/Syllabus.txt)):
-
 ### Frontend Units (ReactJS)
 - **Unit I (ES6+ & React Fundamentals)**: Arrow functions, `let`/`const`, immutability, destructuring, spread/rest, modular directory layout (`src/components/`, `src/lib/`, `src/context/`).
 - **Unit II (Component Design & Tailwind)**: Atomic components (`Button`, `Card`, `Badge`, `Input`), composition patterns, lifting state up, responsive Tailwind breakpoints (`sm:`, `md:`, `lg:`), semantic HTML.

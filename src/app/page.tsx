@@ -22,10 +22,6 @@ export default function HomePage() {
       {/* Hero Section */}
       <section className="relative overflow-hidden px-4 pt-20 pb-16 sm:px-6 lg:px-8 bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(99,102,241,0.15),rgba(255,255,255,0))]">
         <div className="mx-auto max-w-5xl text-center space-y-6">
-          <Badge variant="purple" className="px-4 py-1.5 text-xs font-semibold gap-1.5">
-            <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
-            5th Semester B.Tech CSE Course Project
-          </Badge>
           <h1 className="text-4xl sm:text-6xl font-extrabold tracking-tight text-white leading-tight">
             Final-Year Capstone & Industry Project <br />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-purple-300 to-sky-400">
