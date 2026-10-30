@@ -188,7 +188,7 @@ export function DashboardRoleActions({ user, project: initialProject, allProject
         <div className="flex items-center gap-3">
           {role === 'SPONSOR' && (
             <Button variant="primary" size="sm" onClick={() => setShowCreateModal(true)}>
-              <PlusCircle className="w-4 h-4 mr-1.5" /> Post New Problem Statement (Step 1)
+              <PlusCircle className="w-4 h-4 mr-1.5" /> Post New Problem Statement
             </Button>
           )}
 
@@ -280,9 +280,9 @@ export function DashboardRoleActions({ user, project: initialProject, allProject
 
             <div className="space-y-6">
               <Card>
-                <CardHeader>
+                <CardHeader className="pb-3">
                   <CardTitle>Your Team Roster</CardTitle>
-                  <CardDescription>{project.allocatedTeam?.name || 'GeoPath Innovators'}</CardDescription>
+                  <CardDescription className="truncate">{project.allocatedTeam?.name || 'GeoPath Innovators'}</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-3">
                   <div className="flex items-center justify-between p-2 rounded-lg bg-zinc-950/40">
@@ -423,7 +423,7 @@ export function DashboardRoleActions({ user, project: initialProject, allProject
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
               <div>
-                <CardTitle>Examiner Rubrics Sheet (Step 8)</CardTitle>
+                <CardTitle>Examiner Rubrics Sheet</CardTitle>
                 <CardDescription>Standardized 6-criteria marksheet with radar visualization</CardDescription>
               </div>
               <Link href="/evaluation">
@@ -480,7 +480,7 @@ export function DashboardRoleActions({ user, project: initialProject, allProject
             <Card>
               <CardContent className="pt-6">
                 <p className="text-xs font-medium text-zinc-400">Allocated Engineering Cohort</p>
-                <h4 className="mt-1 text-base font-bold text-white truncate">{project.allocatedTeam?.name}</h4>
+                <h4 className="mt-1 text-base font-bold text-white truncate leading-tight">{project.allocatedTeam?.name}</h4>
                 <p className="mt-3 text-xs text-indigo-400">Deliverables Completed</p>
               </CardContent>
             </Card>
@@ -559,7 +559,7 @@ export function DashboardRoleActions({ user, project: initialProject, allProject
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
               <div>
-                <CardTitle>Step 2: Administrator Project Approval Gate</CardTitle>
+                <CardTitle>Administrator Project Approval Gate</CardTitle>
                 <CardDescription>
                   Review submitted industry problem statements before releasing to the student marketplace
                 </CardDescription>
@@ -617,7 +617,7 @@ export function DashboardRoleActions({ user, project: initialProject, allProject
           {/* Step 4: Competing Team Applications & Allocation Review */}
           <Card>
             <CardHeader>
-              <CardTitle>Step 4: Competing Team Applications Review & Allocation</CardTitle>
+              <CardTitle>Competing Team Applications Review & Allocation</CardTitle>
               <CardDescription>
                 Review proposals from 2 competing student teams for &quot;Smart Campus Navigation System&quot;
               </CardDescription>
@@ -646,7 +646,7 @@ export function DashboardRoleActions({ user, project: initialProject, allProject
                     <p className="text-xs text-zinc-300 bg-zinc-900/50 p-3 rounded-lg border border-zinc-800">
                       <strong>Submitted Proposal:</strong> {app.proposal}
                     </p>
-                    {app.status === 'PENDING' && (
+                    {(app.status === 'PENDING' || app.status === 'ACCEPTED') && (
                       <div className="flex items-center gap-2 pt-2">
                         <Button
                           size="sm"
@@ -654,7 +654,7 @@ export function DashboardRoleActions({ user, project: initialProject, allProject
                           isLoading={isAllocatingTeam}
                           onClick={() => handleAllocateTeam(project.id, app.id)}
                         >
-                          Accept Team & Allocate Project
+                          {app.status === 'ACCEPTED' ? '✓ Allocated — Re-Allocate' : 'Accept Team & Allocate Project'}
                         </Button>
                       </div>
                     )}
@@ -671,7 +671,7 @@ export function DashboardRoleActions({ user, project: initialProject, allProject
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 overflow-y-auto">
           <Card className="max-w-xl w-full bg-zinc-900 border-zinc-700 space-y-4 my-8">
             <CardHeader>
-              <CardTitle>Step 1: Sponsor Project Opportunity Formulation</CardTitle>
+              <CardTitle>Sponsor Project Opportunity Formulation</CardTitle>
               <CardDescription>
                 Define industry problem statements, technical constraints, team requirements, and IP terms
               </CardDescription>

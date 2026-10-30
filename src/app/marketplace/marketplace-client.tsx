@@ -116,6 +116,7 @@ export function MarketplaceClientFilter({ initialProjects }: Props) {
         {filteredProjects.map((project) => {
           const isBookmarked = bookmarkedIds.includes(project.id);
           const hasTeam = Boolean(project.allocatedTeamId || project.allocatedTeam);
+          const isOpen = !hasTeam || project.status === 'APPROVED';
 
           return (
             <Card key={project.id} className="flex flex-col justify-between hover:border-zinc-700 transition-all">
@@ -183,8 +184,8 @@ export function MarketplaceClientFilter({ initialProjects }: Props) {
                     <span className="flex items-center gap-1.5">
                       <Users className="w-3.5 h-3.5 text-zinc-400" /> Status
                     </span>
-                    <Badge variant={hasTeam ? 'purple' : 'success'}>
-                      {hasTeam ? 'Team Allocated' : 'Open for Cohort Applications'}
+                    <Badge variant={isOpen ? 'success' : 'purple'}>
+                      {isOpen ? 'Open for Applications' : 'Team Allocated'}
                     </Badge>
                   </div>
                 </div>
@@ -197,16 +198,14 @@ export function MarketplaceClientFilter({ initialProjects }: Props) {
                   </Button>
                 </Link>
 
-                {!hasTeam && (
-                  <Button
-                    variant="primary"
-                    size="sm"
-                    className="w-full"
-                    onClick={() => setApplyingProjectId(project.id)}
-                  >
-                    Apply as Cohort
-                  </Button>
-                )}
+                <Button
+                  variant={hasTeam ? 'secondary' : 'primary'}
+                  size="sm"
+                  className="w-full"
+                  onClick={() => setApplyingProjectId(project.id)}
+                >
+                  {hasTeam ? 'Apply Anyway' : 'Apply as Cohort'}
+                </Button>
               </div>
             </Card>
           );
