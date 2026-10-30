@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getCurrentUser } from '@/lib/auth';
-import { rubricEvaluationSchema } from '@/lib/validations';
 import { mockDb } from '@/lib/mock-db';
 
 export async function GET(req: NextRequest) {
@@ -32,7 +31,8 @@ export async function GET(req: NextRequest) {
 
     if (evaluations.length === 0) {
       await mockDb.init();
-      evaluations = mockDb.evaluations;
+      const proj = mockDb.projects.find((p) => p.id === (projectId || 'smart-campus-nav')) || mockDb.projects[0];
+      evaluations = proj ? proj.evaluations : [];
     }
 
     return NextResponse.json({ evaluations });
@@ -45,80 +45,107 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const user = await getCurrentUser();
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized: Please log in' }, { status: 401 });
+    if (!user || (user.role !== 'EXAMINER' && user.role !== 'ADMIN')) {
+      return NextResponse.json({ error: 'Unauthorized: Examiners and Admins only' }, { status: 403 });
     }
 
     const body = await req.json();
 
     const {
-      projectId,
-      milestonePhase,
-      problemDefinitionScore,
-      methodologyScore,
-      implementationScore,
-      originalityScore,
-      presentationScore,
-      qualitativeRemarks,
+      projectId = 'smart-campus-nav',
+      technicalImplementationScore = 24,
+      problemUnderstandingScore = 14.5,
+      innovationScore = 14,
+      documentationScore = 14.5,
+      presentationScore = 14,
+      projectOutcomeScore = 14.5,
+      comments = '',
     } = body;
 
-    const totalScore =
-      Number(problemDefinitionScore) +
-      Number(methodologyScore) +
-      Number(implementationScore) +
-      Number(originalityScore) +
-      Number(presentationScore);
+    const tech = Math.min(25, Math.max(0, Number(technicalImplementationScore) || 0));
+    const problem = Math.min(15, Math.max(0, Number(problemUnderstandingScore) || 0));
+    const innov = Math.min(15, Math.max(0, Number(innovationScore) || 0));
+    const doc = Math.min(15, Math.max(0, Number(documentationScore) || 0));
+    const pres = Math.min(15, Math.max(0, Number(presentationScore) || 0));
+    const outcome = Math.min(15, Math.max(0, Number(projectOutcomeScore) || 0));
+    const totalScore = Number((tech + problem + innov + doc + pres + outcome).toFixed(1));
 
     let evaluation: any = null;
 
     try {
       evaluation = await prisma.evaluation.upsert({
         where: {
-          projectId_examinerId_milestonePhase: {
+          projectId_examinerId: {
             projectId,
             examinerId: user.id,
-            milestonePhase,
           },
         },
         update: {
-          problemDefinitionScore,
-          methodologyScore,
-          implementationScore,
-          originalityScore,
-          presentationScore,
+          technicalImplementationScore: tech,
+          problemUnderstandingScore: problem,
+          innovationScore: innov,
+          documentationScore: doc,
+          presentationScore: pres,
+          projectOutcomeScore: outcome,
           totalScore,
-          qualitativeRemarks,
+          comments,
+          isSubmitted: true,
+          submittedAt: new Date(),
         },
         create: {
           projectId,
           examinerId: user.id,
-          milestonePhase,
-          problemDefinitionScore,
-          methodologyScore,
-          implementationScore,
-          originalityScore,
-          presentationScore,
+          technicalImplementationScore: tech,
+          problemUnderstandingScore: problem,
+          innovationScore: innov,
+          documentationScore: doc,
+          presentationScore: pres,
+          projectOutcomeScore: outcome,
           totalScore,
-          qualitativeRemarks,
+          comments,
+          isSubmitted: true,
+          submittedAt: new Date(),
         },
       });
     } catch {
       // Fallback save in mockDb
       await mockDb.init();
-      evaluation = {
-        id: 'eval_' + Date.now(),
-        projectId,
-        examinerId: user.id,
-        milestonePhase,
-        problemDefinitionScore,
-        methodologyScore,
-        implementationScore,
-        originalityScore,
-        presentationScore,
-        totalScore,
-        qualitativeRemarks,
-      };
-      mockDb.evaluations.push(evaluation);
+      const proj = mockDb.projects.find((p) => p.id === projectId) || mockDb.projects[0];
+      if (proj) {
+        let existing = proj.evaluations.find((e: any) => e.examinerId === user.id);
+        if (!existing) {
+          existing = {
+            id: 'eval_' + Date.now(),
+            projectId,
+            examinerId: user.id,
+            examinerName: user.name,
+            examinerDepartment: user.department || 'Academic Committee',
+            technicalImplementationScore: tech,
+            problemUnderstandingScore: problem,
+            innovationScore: innov,
+            documentationScore: doc,
+            presentationScore: pres,
+            projectOutcomeScore: outcome,
+            totalScore,
+            comments: comments || '',
+            isSubmitted: true,
+            submittedAt: new Date().toISOString(),
+          };
+          proj.evaluations.push(existing);
+        } else {
+          existing.technicalImplementationScore = tech;
+          existing.problemUnderstandingScore = problem;
+          existing.innovationScore = innov;
+          existing.documentationScore = doc;
+          existing.presentationScore = pres;
+          existing.projectOutcomeScore = outcome;
+          existing.totalScore = totalScore;
+          existing.comments = comments;
+          existing.isSubmitted = true;
+          existing.submittedAt = new Date().toISOString();
+        }
+        evaluation = existing;
+      }
     }
 
     return NextResponse.json({ evaluation }, { status: 201 });

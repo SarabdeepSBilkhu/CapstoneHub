@@ -4,30 +4,6 @@ import { notFound } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
 import { mockDb } from '@/lib/mock-db';
 import { getCurrentUser } from '@/lib/auth';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import {
-  FolderGit2,
-  Calendar,
-  CheckCircle2,
-  Clock,
-  ArrowRight,
-  TrendingUp,
-  Award,
-  AlertCircle,
-  FileCheck2,
-  ExternalLink,
-  Github,
-  Building2,
-  ShieldCheck,
-  User,
-  Users,
-  Layers,
-  FileText,
-  Lock,
-} from 'lucide-react';
-import { formatDate } from '@/lib/utils';
 import { ProjectWorkspaceInteractive } from './workspace-interactive';
 
 interface WorkspaceProps {
@@ -87,4 +63,3 @@ export default async function ProjectWorkspacePage({ params }: WorkspaceProps) {
     </div>
   );
 }
-

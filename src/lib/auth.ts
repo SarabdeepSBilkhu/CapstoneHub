@@ -71,7 +71,7 @@ export async function getCurrentUser() {
         email: mockUser.email,
         role: mockUser.role,
         department: mockUser.department,
-        avatarUrl: mockUser.avatarUrl,
+        avatarUrl: undefined,
         bio: mockUser.bio,
       };
     }
