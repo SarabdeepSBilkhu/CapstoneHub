@@ -52,21 +52,41 @@ export default async function ShowcasePage() {
         </p>
       </div>
 
+      {/* Stats bar */}
+      <div className="flex flex-wrap gap-6 justify-center py-4">
+        {[
+          { label: 'Completed Projects', value: showcaseProjects.length },
+          { label: 'Avg. Examiner Score', value: (() => { const evals = showcaseProjects.flatMap((p: any) => p.evaluations || []); if (!evals.length) return '—'; const avg = evals.reduce((s: number, e: any) => s + (e.totalScore || 0), 0) / evals.length; return avg.toFixed(1) + ' / 100'; })() },
+          { label: 'Open Source Projects', value: showcaseProjects.filter((p: any) => p.ipStatus === 'OPEN_SOURCE').length },
+          { label: 'Industry Sponsored', value: showcaseProjects.filter((p: any) => p.category === 'INDUSTRY_SPONSORED').length },
+        ].map(stat => (
+          <div key={stat.label} className="text-center">
+            <p className="text-2xl font-bold text-indigo-400">{stat.value}</p>
+            <p className="text-xs text-zinc-500 mt-0.5">{stat.label}</p>
+          </div>
+        ))}
+      </div>
+
       {/* Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-4">
-        {showcaseProjects.map((project: any) => (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pt-2">
+        {showcaseProjects.map((project: any) => {
+          const avgScore = project.evaluations?.length
+            ? (project.evaluations.reduce((s: number, e: any) => s + (e.totalScore || 0), 0) / project.evaluations.length).toFixed(1)
+            : null;
+          const simScore = project.similarityScore ?? 12;
+          return (
           <Card
             key={project.id}
-            className="flex flex-col justify-between hover:border-zinc-700 transition-all border-zinc-800/80 bg-zinc-900/40"
+            className="flex flex-col justify-between hover:border-zinc-600 transition-all border-zinc-800/80 bg-zinc-900/40"
           >
             <CardHeader className="space-y-3">
-              <div className="flex items-center justify-between gap-2">
-                <Badge variant={project.category === 'INDUSTRY_SPONSORED' ? 'warning' : 'info'}>
-                  {project.category.replace('_', ' ')}
+              <div className="flex items-center justify-between gap-2 flex-wrap">
+                <Badge variant={project.category === 'INDUSTRY_SPONSORED' ? 'warning' : project.category === 'ENTREPRENEURSHIP_CAPSTONE' ? 'success' : 'info'}>
+                  {project.category.replace(/_/g, ' ')}
                 </Badge>
                 <div className="flex items-center gap-1.5 text-xs text-emerald-400 font-medium">
-                  <CheckCircle2 className="w-4 h-4" />
-                  <span>Accreditation Approved (12% Similarity)</span>
+                  <CheckCircle2 className="w-3.5 h-3.5" />
+                  <span>{simScore}% Similarity</span>
                 </div>
               </div>
               <CardTitle className="text-xl leading-tight text-white">{project.title}</CardTitle>
@@ -93,11 +113,20 @@ export default async function ShowcasePage() {
                 ))}
               </div>
 
+              {/* Avg score + metadata */}
               <div className="border-t border-zinc-800/80 pt-3 flex flex-wrap items-center justify-between gap-2 text-xs text-zinc-400">
                 <div>
-                  <span className="text-zinc-500">Allocated Cohort: </span>
-                  <span className="font-medium text-white">{project.allocatedTeam?.name || 'GeoPath Innovators'}</span>
+                  <span className="text-zinc-500">Cohort: </span>
+                  <span className="font-medium text-white">{project.allocatedTeam?.name || '—'}</span>
                 </div>
+                {avgScore && (
+                  <div className="flex items-center gap-1">
+                    <Award className="w-3.5 h-3.5 text-amber-400" />
+                    <span className="font-semibold text-amber-400">{avgScore} / 100</span>
+                  </div>
+                )}
+              </div>
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-zinc-400">
                 {project.supervisor && (
                   <div>
                     <span className="text-zinc-500">Supervisor: </span>
@@ -110,6 +139,10 @@ export default async function ShowcasePage() {
                     <span className="font-medium text-amber-400">{project.sponsor.name}</span>
                   </div>
                 )}
+                <div>
+                  <span className="text-zinc-500">IP: </span>
+                  <span className="font-medium text-zinc-300">{project.ipStatus?.replace(/_/g, ' ')}</span>
+                </div>
               </div>
             </CardContent>
 
@@ -140,12 +173,13 @@ export default async function ShowcasePage() {
               </div>
               <Link href={`/workspace/${project.id}`}>
                 <Button variant="outline" size="sm">
-                  View End-to-End Workspace
+                  View Workspace
                 </Button>
               </Link>
             </CardFooter>
           </Card>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
