@@ -28,6 +28,7 @@ import {
   Sparkles,
   ExternalLink,
   Code,
+  Trash2,
 } from 'lucide-react';
 
 interface Props {
@@ -60,6 +61,33 @@ export function DashboardRoleActions({ user, project: initialProject, allProject
   const totalMilestones = project.milestones?.length || 0;
   const approvedMilestones = project.milestones?.filter((m: any) => m.status === 'APPROVED').length || 0;
   const progressPercent = totalMilestones > 0 ? Math.round((approvedMilestones / totalMilestones) * 100) : 0;
+
+  // Real calculated admin statistics
+  const totalProjectsCount = allProjects.length;
+  const pendingApprovalsCount = allProjects.filter((p) => p.status === 'PENDING_APPROVAL').length;
+  const activeProjectsCount = allProjects.filter(
+    (p) => p.status === 'APPROVED' || p.status === 'ALLOCATED' || p.status === 'IN_PROGRESS'
+  ).length;
+
+  // Unique sponsors count
+  const uniqueSponsorsCount = new Set(
+    allProjects
+      .map((p) => p.sponsor?.name || p.sponsorId)
+      .filter(Boolean)
+  ).size;
+
+  // Total allocated students count across all allocated teams
+  const totalStudentsCount = allProjects.reduce((acc, p) => {
+    const memberCount = p.allocatedTeam?.members?.length || (p.allocatedTeamId ? 2 : 0);
+    return acc + memberCount;
+  }, 0);
+
+  // Examiner calculations for real scores
+  const allProjectEvaluations = project.evaluations || [];
+  const calculatedExaminerAvg = allProjectEvaluations.length > 0
+    ? (allProjectEvaluations.reduce((sum: number, e: any) => sum + (e.totalScore || 0), 0) / allProjectEvaluations.length).toFixed(1)
+    : '0.0';
+  const submittedEvaluationsCount = allProjectEvaluations.filter((e: any) => e.isSubmitted).length;
 
   // Step 1: Sponsor Creates Project
   const handleCreateProject = async (e: React.FormEvent) => {
@@ -146,6 +174,30 @@ export function DashboardRoleActions({ user, project: initialProject, allProject
       toast(err.message, 'error');
     } finally {
       setIsAllocatingTeam(false);
+    }
+  };
+
+  // Admin: Delete Project action
+  const [deletingProjectId, setDeletingProjectId] = useState<string | null>(null);
+
+  const handleDeleteProject = async (pId: string, title: string) => {
+    if (!window.confirm(`Are you sure you want to delete "${title}"? This cannot be undone.`)) {
+      return;
+    }
+    setDeletingProjectId(pId);
+    try {
+      const res = await fetch(`/api/projects/delete?id=${encodeURIComponent(pId)}`, {
+        method: 'DELETE',
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to delete project');
+
+      toast(data.message || 'Project deleted successfully!', 'success');
+      setAllProjects((prev) => prev.filter((p) => p.id !== pId));
+    } catch (err: any) {
+      toast(err.message, 'error');
+    } finally {
+      setDeletingProjectId(null);
     }
   };
 
@@ -390,7 +442,7 @@ export function DashboardRoleActions({ user, project: initialProject, allProject
             <Card className="border-purple-900/40 bg-purple-950/20">
               <CardContent className="pt-6">
                 <p className="text-xs font-medium text-zinc-400">Assigned Cohorts</p>
-                <h4 className="mt-1 text-2xl font-bold text-white">1 Capstone Defense</h4>
+                <h4 className="mt-1 text-2xl font-bold text-white">{allProjects.length} Capstone Defenses</h4>
                 <p className="mt-3 text-xs text-purple-400">Independent Assessment</p>
               </CardContent>
             </Card>
@@ -398,23 +450,23 @@ export function DashboardRoleActions({ user, project: initialProject, allProject
             <Card>
               <CardContent className="pt-6">
                 <p className="text-xs font-medium text-zinc-400">Independent Evaluators</p>
-                <h4 className="mt-1 text-2xl font-bold text-white">3 Examiners</h4>
-                <p className="mt-3 text-xs text-emerald-400">All 3 Scored & Submitted</p>
+                <h4 className="mt-1 text-2xl font-bold text-white">{allProjectEvaluations.length} Examiners</h4>
+                <p className="mt-3 text-xs text-emerald-400">{submittedEvaluationsCount} Scored & Submitted</p>
               </CardContent>
             </Card>
 
             <Card>
               <CardContent className="pt-6">
                 <p className="text-xs font-medium text-zinc-400">Calculated Final Score</p>
-                <h4 className="mt-1 text-2xl font-bold text-white">94.5 / 100</h4>
-                <p className="mt-3 text-xs text-amber-400">Distinction Grade (A+)</p>
+                <h4 className="mt-1 text-2xl font-bold text-white">{calculatedExaminerAvg} / 100</h4>
+                <p className="mt-3 text-xs text-amber-400">Evaluator Composite</p>
               </CardContent>
             </Card>
 
             <Card>
               <CardContent className="pt-6">
                 <p className="text-xs font-medium text-zinc-400">Originality Clearance</p>
-                <h4 className="mt-1 text-2xl font-bold text-white">12.0%</h4>
+                <h4 className="mt-1 text-2xl font-bold text-white">{project.similarityScore ?? 12.0}%</h4>
                 <p className="mt-3 text-xs text-zinc-400">Similarity Verified</p>
               </CardContent>
             </Card>
@@ -436,10 +488,10 @@ export function DashboardRoleActions({ user, project: initialProject, allProject
               <div className="p-4 rounded-xl bg-zinc-950/60 border border-zinc-800 space-y-3">
                 <div className="flex items-center justify-between">
                   <h4 className="font-semibold text-white text-sm">{project.title}</h4>
-                  <Badge variant="purple">Average: 94.5 / 100</Badge>
+                  <Badge variant="purple">Average: {calculatedExaminerAvg} / 100</Badge>
                 </div>
                 <p className="text-xs text-zinc-400">
-                  Team: {project.allocatedTeam?.name} • Supervisor: {project.supervisor?.name}
+                  Team: {project.allocatedTeam?.name || 'Unassigned'} • Supervisor: {project.supervisor?.name || 'Assigned Faculty'}
                 </p>
               </div>
             </CardContent>
@@ -524,33 +576,35 @@ export function DashboardRoleActions({ user, project: initialProject, allProject
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             <Card className="border-rose-900/40 bg-rose-950/20">
               <CardContent className="pt-6">
-                <p className="text-xs font-medium text-zinc-400">Total Students</p>
-                <h4 className="mt-1 text-3xl font-extrabold text-white">128</h4>
-                <p className="mt-2 text-xs text-rose-400">CSE Department</p>
+                <p className="text-xs font-medium text-zinc-400">Total Enrolled Students</p>
+                <h4 className="mt-1 text-3xl font-extrabold text-white">{totalStudentsCount}</h4>
+                <p className="mt-2 text-xs text-rose-400">Allocated in Cohorts</p>
               </CardContent>
             </Card>
 
             <Card>
               <CardContent className="pt-6">
                 <p className="text-xs font-medium text-zinc-400">Active Projects</p>
-                <h4 className="mt-1 text-3xl font-extrabold text-white">32</h4>
-                <p className="mt-2 text-xs text-indigo-400">In Progress / Allocated</p>
+                <h4 className="mt-1 text-3xl font-extrabold text-white">{activeProjectsCount}</h4>
+                <p className="mt-2 text-xs text-indigo-400">Approved & In Progress</p>
               </CardContent>
             </Card>
 
             <Card>
               <CardContent className="pt-6">
-                <p className="text-xs font-medium text-zinc-400">Industry Sponsors</p>
-                <h4 className="mt-1 text-3xl font-extrabold text-white">8</h4>
-                <p className="mt-2 text-xs text-amber-400">Steerpath, NovaLabs, etc.</p>
+                <p className="text-xs font-medium text-zinc-400">Industry / Faculty Sponsors</p>
+                <h4 className="mt-1 text-3xl font-extrabold text-white">{uniqueSponsorsCount}</h4>
+                <p className="mt-2 text-xs text-amber-400">Active Challenge Partners</p>
               </CardContent>
             </Card>
 
             <Card>
               <CardContent className="pt-6">
                 <p className="text-xs font-medium text-zinc-400">Pending Approvals</p>
-                <h4 className="mt-1 text-3xl font-extrabold text-white">12</h4>
-                <p className="mt-2 text-xs text-emerald-400">Requires Committee Sign-off</p>
+                <h4 className="mt-1 text-3xl font-extrabold text-white">{pendingApprovalsCount}</h4>
+                <p className="mt-2 text-xs text-emerald-400">
+                  {pendingApprovalsCount === 0 ? 'All Cleared' : 'Requires Committee Sign-off'}
+                </p>
               </CardContent>
             </Card>
           </div>
@@ -607,6 +661,16 @@ export function DashboardRoleActions({ user, project: initialProject, allProject
                       <Link href={`/workspace/${p.id}`}>
                         <Button size="sm" variant="outline">Inspect Details</Button>
                       </Link>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="text-zinc-500 hover:text-rose-400 hover:bg-rose-500/10 p-2"
+                        title="Delete Project"
+                        isLoading={deletingProjectId === p.id}
+                        onClick={() => handleDeleteProject(p.id, p.title)}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
                     </div>
                   </div>
                 </div>

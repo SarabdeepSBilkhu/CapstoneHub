@@ -6,6 +6,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Store, PlusCircle, Search, ExternalLink, Users, Building, ShieldCheck } from 'lucide-react';
+import { getCurrentUser } from '@/lib/auth';
 import { MarketplaceClientFilter } from './marketplace-client';
 
 interface MarketplaceProps {
@@ -13,6 +14,7 @@ interface MarketplaceProps {
 }
 
 export default async function MarketplacePage({ searchParams }: MarketplaceProps) {
+  const user = await getCurrentUser();
   const resolvedParams = await searchParams;
   const categoryFilter = resolvedParams.category;
   const searchQuery = resolvedParams.q;
@@ -69,16 +71,18 @@ export default async function MarketplacePage({ searchParams }: MarketplaceProps
             Explore industry-sponsored problem statements, apply as an engineering cohort, or propose novel capstone research.
           </p>
         </div>
-        <div className="flex items-center gap-3">
-          <Link href="/dashboard">
-            <Button variant="primary" size="sm">
-              <PlusCircle className="w-4 h-4 mr-1.5" /> Post Sponsor Problem
-            </Button>
-          </Link>
-        </div>
+        {user?.role === 'SPONSOR' && (
+          <div className="flex items-center gap-3">
+            <Link href="/dashboard">
+              <Button variant="primary" size="sm">
+                <PlusCircle className="w-4 h-4 mr-1.5" /> Post Sponsor Problem
+              </Button>
+            </Link>
+          </div>
+        )}
       </div>
 
-      <MarketplaceClientFilter initialProjects={projects} />
+      <MarketplaceClientFilter initialProjects={projects} currentUser={user} />
     </div>
   );
 }

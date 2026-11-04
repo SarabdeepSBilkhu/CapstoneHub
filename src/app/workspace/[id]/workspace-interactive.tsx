@@ -315,16 +315,16 @@ export function ProjectWorkspaceInteractive({ project: initialProject, currentUs
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="overflow-hidden">
           <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
+            <div className="flex items-center justify-between gap-2 min-w-0">
+              <div className="min-w-0 flex-1">
                 <p className="text-xs font-medium text-zinc-400">Multi-Examiner Avg</p>
                 <h4 className="mt-1 text-2xl font-bold text-white">
                   {avgTotalScore} <span className="text-xs font-normal text-zinc-400">/ 100</span>
                 </h4>
               </div>
-              <div className="p-2.5 rounded-lg bg-purple-600/20 text-purple-400">
+              <div className="shrink-0 p-2.5 rounded-lg bg-purple-600/20 text-purple-400">
                 <Award className="w-5 h-5" />
               </div>
             </div>
@@ -334,31 +334,31 @@ export function ProjectWorkspaceInteractive({ project: initialProject, currentUs
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="overflow-hidden">
           <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
+            <div className="flex items-center justify-between gap-2 min-w-0">
+              <div className="min-w-0 flex-1">
                 <p className="text-xs font-medium text-zinc-400">Originality Report</p>
                 <h4 className="mt-1 text-2xl font-bold text-white">{project.similarityScore || 12.0}%</h4>
               </div>
-              <div className="p-2.5 rounded-lg bg-emerald-600/20 text-emerald-400">
+              <div className="shrink-0 p-2.5 rounded-lg bg-emerald-600/20 text-emerald-400">
                 <CheckCircle2 className="w-5 h-5" />
               </div>
             </div>
-            <p className="mt-3 text-xs text-emerald-400">Similarity Verified (Under 15% threshold)</p>
+            <p className="mt-3 text-xs text-emerald-400">Similarity Verified (&lt;15%)</p>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="overflow-hidden">
           <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
+            <div className="flex items-center justify-between gap-3 min-w-0">
+              <div className="min-w-0 flex-1">
                 <p className="text-xs font-medium text-zinc-400">Allocated Team</p>
-                <h4 className="mt-1 text-base font-bold text-white truncate">
+                <h4 className="mt-1 text-base font-bold text-white truncate" title={project.allocatedTeam?.name || 'GeoPath Innovators'}>
                   {project.allocatedTeam?.name || 'GeoPath Innovators'}
                 </h4>
               </div>
-              <div className="p-2.5 rounded-lg bg-sky-600/20 text-sky-400">
+              <div className="shrink-0 p-2.5 rounded-lg bg-sky-600/20 text-sky-400">
                 <Users className="w-5 h-5" />
               </div>
             </div>

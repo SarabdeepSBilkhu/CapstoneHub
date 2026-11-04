@@ -49,10 +49,9 @@ export function Navbar({ user }: NavbarProps) {
     ...(user ? [{ href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard }] : []),
     { href: '/marketplace', label: 'Project Market', icon: Store },
     { href: '/showcase', label: 'Showcase', icon: Eye },
-    ...(user?.role === 'SUPERVISOR' || user?.role === 'EXAMINER' || user?.role === 'ADMIN'
+    ...(user?.role === 'EXAMINER' || user?.role === 'ADMIN'
       ? [{ href: '/evaluation', label: 'Rubrics & Grading', icon: FileCheck2 }]
       : []),
-    ...(user?.role === 'ADMIN' ? [{ href: '/admin', label: 'Administration', icon: Users }] : []),
   ];
 
   return (

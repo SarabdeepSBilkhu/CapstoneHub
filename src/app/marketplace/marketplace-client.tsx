@@ -21,9 +21,10 @@ import {
 
 interface Props {
   initialProjects: any[];
+  currentUser?: any;
 }
 
-export function MarketplaceClientFilter({ initialProjects }: Props) {
+export function MarketplaceClientFilter({ initialProjects, currentUser }: Props) {
   const { toast } = useToast();
   const [projects, setProjects] = useState(initialProjects);
   const [searchTerm, setSearchTerm] = useState('');
@@ -194,18 +195,20 @@ export function MarketplaceClientFilter({ initialProjects }: Props) {
               <div className="p-6 pt-3 flex items-center gap-2">
                 <Link href={`/workspace/${project.id}`} className="w-full">
                   <Button variant="outline" size="sm" className="w-full">
-                    Open Workspace <ArrowRight className="w-3.5 h-3.5 ml-1" />
+                    Workspace <ArrowRight className="w-3 h-3 ml-2" />
                   </Button>
                 </Link>
 
-                <Button
-                  variant={hasTeam ? 'secondary' : 'primary'}
-                  size="sm"
-                  className="w-full"
-                  onClick={() => setApplyingProjectId(project.id)}
-                >
-                  {hasTeam ? 'Apply Anyway' : 'Apply as Cohort'}
-                </Button>
+                {(!currentUser || currentUser.role === 'STUDENT') && (
+                  <Button
+                    variant={hasTeam ? 'secondary' : 'primary'}
+                    size="sm"
+                    className="w-full"
+                    onClick={() => setApplyingProjectId(project.id)}
+                  >
+                    {hasTeam ? 'Apply Anyway' : 'Apply as Cohort'}
+                  </Button>
+                )}
               </div>
             </Card>
           );
