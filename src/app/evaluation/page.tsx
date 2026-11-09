@@ -1,12 +1,12 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/context/toast-context';
-import { Scale, Award, CheckCircle2, ShieldCheck } from 'lucide-react';
+import { Scale, Lock, CheckCircle2, Eye } from 'lucide-react';
 import {
   RadarChart,
   PolarGrid,
@@ -16,28 +16,88 @@ import {
   ResponsiveContainer,
 } from 'recharts';
 
+// Per-examiner default scores (index 0, 1, 2)
+const EXAMINER_DEFAULTS = [
+  {
+    tech: 24, problem: 14.5, innov: 14, doc: 14.5, pres: 14, outcome: 14.5,
+    comments: 'Exceptional system architecture. Multi-floor routing algorithm performs flawlessly with smooth SVG animations.',
+  },
+  {
+    tech: 23.5, problem: 14, innov: 14.5, doc: 14, pres: 14.5, outcome: 14,
+    comments: 'High practical utility. Wheelchair accessible routing demonstrates solid engineering empathy.',
+  },
+  {
+    tech: 23, problem: 14.5, innov: 13.5, doc: 14.5, pres: 14, outcome: 14,
+    comments: 'Clean TypeScript code and modular architecture. Railway deployment is verified.',
+  },
+];
+
+const EXAMINERS = [
+  { name: 'Prof. Sarah Jenkins', dept: 'Information Technology', title: 'Lead Technical Evaluator', email: 'examiner@capstonehub.edu' },
+  { name: 'Dr. Vivek Sharma', dept: 'Computer Science & Engineering', title: 'External Assessment Chair', email: 'examiner2@capstonehub.edu' },
+  { name: 'Prof. Claire Dubois', dept: 'Software Engineering', title: 'Industry Liaison Member', email: 'examiner3@capstonehub.edu' },
+];
+
 export default function EvaluationPage() {
   const { toast } = useToast();
-  const [selectedExaminerIndex, setSelectedExaminerIndex] = useState<0 | 1 | 2>(0);
+
+  // Current logged-in user (fetched on mount)
+  const [currentUser, setCurrentUser] = useState<any>(null);
+  const [isLoadingUser, setIsLoadingUser] = useState(true);
+
+  // Which examiner index the current user maps to (or null for Admin read-only view)
+  const [myExaminerIndex, setMyExaminerIndex] = useState<0 | 1 | 2 | null>(null);
+
+  // Admin can browse all three in read-only mode
+  const [viewingIndex, setViewingIndex] = useState<0 | 1 | 2>(0);
+
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
 
-  // 3 Independent Examiners roster
-  const examiners = [
-    { name: 'Prof. Sarah Jenkins', dept: 'Information Technology', title: 'Lead Technical Evaluator' },
-    { name: 'Dr. Vivek Sharma', dept: 'Computer Science & Engineering', title: 'External Assessment Chair' },
-    { name: 'Prof. Claire Dubois', dept: 'Software Engineering', title: 'Industry Liaison Member' },
-  ];
+  // Score form state (always reflects the viewing/editing examiner)
+  const [techScore, setTechScore] = useState<number>(EXAMINER_DEFAULTS[0].tech);
+  const [problemScore, setProblemScore] = useState<number>(EXAMINER_DEFAULTS[0].problem);
+  const [innovScore, setInnovScore] = useState<number>(EXAMINER_DEFAULTS[0].innov);
+  const [docScore, setDocScore] = useState<number>(EXAMINER_DEFAULTS[0].doc);
+  const [presScore, setPresScore] = useState<number>(EXAMINER_DEFAULTS[0].pres);
+  const [outcomeScore, setOutcomeScore] = useState<number>(EXAMINER_DEFAULTS[0].outcome);
+  const [comments, setComments] = useState<string>(EXAMINER_DEFAULTS[0].comments);
 
-  // 6 Criteria Standard Rubric state (Total = 100)
-  const [techScore, setTechScore] = useState<number>(24);     // Max 25
-  const [problemScore, setProblemScore] = useState<number>(14.5); // Max 15
-  const [innovScore, setInnovScore] = useState<number>(14);     // Max 15
-  const [docScore, setDocScore] = useState<number>(14.5);       // Max 15
-  const [presScore, setPresScore] = useState<number>(14);       // Max 15
-  const [outcomeScore, setOutcomeScore] = useState<number>(14.5); // Max 15
-  const [comments, setComments] = useState<string>(
-    'Exceptional system architecture. Multi-floor routing algorithm performs flawlessly with smooth SVG animations.'
-  );
+  // Fetch current user on mount to determine role and lock the UI
+  useEffect(() => {
+    fetch('/api/auth/session')
+      .then((r) => r.json())
+      .then(({ user }) => {
+        setCurrentUser(user);
+        if (user?.role === 'EXAMINER') {
+          // Map email → examiner index
+          const idx = EXAMINERS.findIndex((ex) => ex.email === user.email);
+          const resolvedIdx = (idx >= 0 ? idx : 0) as 0 | 1 | 2;
+          setMyExaminerIndex(resolvedIdx);
+          setViewingIndex(resolvedIdx);
+          loadDefaults(resolvedIdx);
+        } else if (user?.role === 'ADMIN') {
+          // Admin reads all — start on index 0 read-only
+          setMyExaminerIndex(null);
+          setViewingIndex(0);
+          loadDefaults(0);
+        }
+      })
+      .catch(() => {})
+      .finally(() => setIsLoadingUser(false));
+  }, []);
+
+  function loadDefaults(idx: 0 | 1 | 2) {
+    const d = EXAMINER_DEFAULTS[idx];
+    setTechScore(d.tech);
+    setProblemScore(d.problem);
+    setInnovScore(d.innov);
+    setDocScore(d.doc);
+    setPresScore(d.pres);
+    setOutcomeScore(d.outcome);
+    setComments(d.comments);
+    setSubmitted(false);
+  }
 
   const totalScore = Number(
     (techScore + problemScore + innovScore + docScore + presScore + outcomeScore).toFixed(1)
@@ -54,6 +114,7 @@ export default function EvaluationPage() {
 
   const handleSubmitEvaluation = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (myExaminerIndex === null) return; // admin cannot submit
     setIsSubmitting(true);
     try {
       const payload = {
@@ -77,6 +138,7 @@ export default function EvaluationPage() {
       if (!res.ok) throw new Error(resData.error || 'Failed to submit evaluation');
 
       toast(resData.message || 'Rubric evaluation recorded successfully!', 'success');
+      setSubmitted(true);
     } catch (err: any) {
       toast(err.message, 'error');
     } finally {
@@ -84,14 +146,31 @@ export default function EvaluationPage() {
     }
   };
 
+  const isAdminView = currentUser?.role === 'ADMIN';
+  const isReadOnly = isAdminView; // admins view but cannot edit/submit
+  const activeExaminer = EXAMINERS[viewingIndex];
+
+  if (isLoadingUser) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <p className="text-zinc-400 text-sm animate-pulse">Loading evaluation panel…</p>
+      </div>
+    );
+  }
+
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 space-y-8">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-zinc-800 pb-6">
         <div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <h1 className="text-3xl font-bold tracking-tight text-white">Multi-Examiner Evaluation</h1>
             <Badge variant="purple">3 Independent Faculty Evaluators</Badge>
+            {isReadOnly && (
+              <Badge variant="warning" className="flex items-center gap-1">
+                <Eye className="w-3 h-3" /> Admin Read-Only View
+              </Badge>
+            )}
           </div>
           <p className="mt-1 text-sm text-zinc-400">
             Evaluating <strong className="text-white">Smart Campus Navigation System</strong> across 6 standardized
@@ -99,49 +178,34 @@ export default function EvaluationPage() {
           </p>
         </div>
 
-        {/* Examiner Persona Switcher */}
+        {/* Examiner selector — Admin browses read-only; Examiner sees only their own locked tab */}
         <div className="flex items-center gap-2 bg-zinc-900 p-1 rounded-xl border border-zinc-800">
-          {examiners.map((ex, idx) => (
-            <button
-              key={ex.name}
-              type="button"
-              onClick={() => {
-                setSelectedExaminerIndex(idx as 0 | 1 | 2);
-                if (idx === 1) {
-                  setTechScore(23.5);
-                  setProblemScore(14);
-                  setInnovScore(14.5);
-                  setDocScore(14);
-                  setPresScore(14.5);
-                  setOutcomeScore(14);
-                  setComments('High practical utility. Wheelchair accessible routing demonstrates solid engineering empathy.');
-                } else if (idx === 2) {
-                  setTechScore(23);
-                  setProblemScore(14.5);
-                  setInnovScore(13.5);
-                  setDocScore(14.5);
-                  setPresScore(14);
-                  setOutcomeScore(14);
-                  setComments('Clean TypeScript code and modular architecture. Railway deployment is verified.');
-                } else {
-                  setTechScore(24);
-                  setProblemScore(14.5);
-                  setInnovScore(14);
-                  setDocScore(14.5);
-                  setPresScore(14);
-                  setOutcomeScore(14.5);
-                  setComments('Exceptional system architecture. Multi-floor routing algorithm performs flawlessly.');
-                }
-              }}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
-                selectedExaminerIndex === idx
-                  ? 'bg-indigo-600 text-white'
-                  : 'text-zinc-400 hover:text-white'
-              }`}
-            >
-              Examiner {idx + 1}
-            </button>
-          ))}
+          {EXAMINERS.map((ex, idx) => {
+            const isLocked = !isAdminView && myExaminerIndex !== null && myExaminerIndex !== idx;
+            return (
+              <button
+                key={ex.name}
+                type="button"
+                disabled={isLocked}
+                onClick={() => {
+                  if (isLocked) return;
+                  setViewingIndex(idx as 0 | 1 | 2);
+                  loadDefaults(idx as 0 | 1 | 2);
+                }}
+                title={isLocked ? 'You can only grade as your assigned examiner identity' : undefined}
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
+                  viewingIndex === idx
+                    ? 'bg-indigo-600 text-white'
+                    : isLocked
+                    ? 'text-zinc-600 cursor-not-allowed'
+                    : 'text-zinc-400 hover:text-white cursor-pointer'
+                }`}
+              >
+                {isLocked ? <Lock className="w-3 h-3 inline mr-1" /> : null}
+                Examiner {idx + 1}
+              </button>
+            );
+          })}
         </div>
       </div>
 
@@ -152,10 +216,14 @@ export default function EvaluationPage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Scale className="w-5 h-5 text-indigo-400" />
-                Individual Examiner Sheet: {examiners[selectedExaminerIndex].name}
+                {isReadOnly ? 'Viewing' : 'Individual Examiner Sheet'}:{' '}
+                {activeExaminer.name}
               </CardTitle>
               <CardDescription>
-                {examiners[selectedExaminerIndex].title} • {examiners[selectedExaminerIndex].dept}
+                {activeExaminer.title} • {activeExaminer.dept}
+                {isReadOnly && (
+                  <span className="ml-2 text-amber-400 font-medium">— Read-only (Admin cannot submit scores)</span>
+                )}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -168,7 +236,9 @@ export default function EvaluationPage() {
                     max={25}
                     min={0}
                     value={techScore}
-                    onChange={(e) => setTechScore(Number(e.target.value))}
+                    readOnly={isReadOnly}
+                    onChange={(e) => !isReadOnly && setTechScore(Number(e.target.value))}
+                    className={isReadOnly ? 'opacity-70 cursor-not-allowed' : ''}
                   />
                   <Input
                     label="2. Problem Understanding (Max 15)"
@@ -177,7 +247,9 @@ export default function EvaluationPage() {
                     max={15}
                     min={0}
                     value={problemScore}
-                    onChange={(e) => setProblemScore(Number(e.target.value))}
+                    readOnly={isReadOnly}
+                    onChange={(e) => !isReadOnly && setProblemScore(Number(e.target.value))}
+                    className={isReadOnly ? 'opacity-70 cursor-not-allowed' : ''}
                   />
                   <Input
                     label="3. Innovation & Novelty (Max 15)"
@@ -186,7 +258,9 @@ export default function EvaluationPage() {
                     max={15}
                     min={0}
                     value={innovScore}
-                    onChange={(e) => setInnovScore(Number(e.target.value))}
+                    readOnly={isReadOnly}
+                    onChange={(e) => !isReadOnly && setInnovScore(Number(e.target.value))}
+                    className={isReadOnly ? 'opacity-70 cursor-not-allowed' : ''}
                   />
                   <Input
                     label="4. Documentation & Schema (Max 15)"
@@ -195,7 +269,9 @@ export default function EvaluationPage() {
                     max={15}
                     min={0}
                     value={docScore}
-                    onChange={(e) => setDocScore(Number(e.target.value))}
+                    readOnly={isReadOnly}
+                    onChange={(e) => !isReadOnly && setDocScore(Number(e.target.value))}
+                    className={isReadOnly ? 'opacity-70 cursor-not-allowed' : ''}
                   />
                   <Input
                     label="5. Presentation & Viva Defense (Max 15)"
@@ -204,7 +280,9 @@ export default function EvaluationPage() {
                     max={15}
                     min={0}
                     value={presScore}
-                    onChange={(e) => setPresScore(Number(e.target.value))}
+                    readOnly={isReadOnly}
+                    onChange={(e) => !isReadOnly && setPresScore(Number(e.target.value))}
+                    className={isReadOnly ? 'opacity-70 cursor-not-allowed' : ''}
                   />
                   <Input
                     label="6. Project Outcome & Deliverable (Max 15)"
@@ -213,7 +291,9 @@ export default function EvaluationPage() {
                     max={15}
                     min={0}
                     value={outcomeScore}
-                    onChange={(e) => setOutcomeScore(Number(e.target.value))}
+                    readOnly={isReadOnly}
+                    onChange={(e) => !isReadOnly && setOutcomeScore(Number(e.target.value))}
+                    className={isReadOnly ? 'opacity-70 cursor-not-allowed' : ''}
                   />
                 </div>
 
@@ -224,14 +304,31 @@ export default function EvaluationPage() {
                   <textarea
                     rows={3}
                     value={comments}
-                    onChange={(e) => setComments(e.target.value)}
-                    className="w-full rounded-lg border border-zinc-700 bg-zinc-950/70 p-3 text-xs text-zinc-100 placeholder:text-zinc-500 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                    readOnly={isReadOnly}
+                    onChange={(e) => !isReadOnly && setComments(e.target.value)}
+                    className={`w-full rounded-lg border border-zinc-700 bg-zinc-950/70 p-3 text-xs text-zinc-100 placeholder:text-zinc-500 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 ${isReadOnly ? 'opacity-70 cursor-not-allowed' : ''}`}
                   />
                 </div>
 
-                <Button type="submit" className="w-full" isLoading={isSubmitting}>
-                  Submit Score as {examiners[selectedExaminerIndex].name}
-                </Button>
+                {!isReadOnly && (
+                  submitted ? (
+                    <div className="flex items-center gap-2 justify-center w-full py-2 rounded-lg bg-emerald-950/40 border border-emerald-800/60 text-emerald-400 text-sm font-semibold">
+                      <CheckCircle2 className="w-4 h-4" />
+                      Score submitted successfully as {activeExaminer.name}
+                    </div>
+                  ) : (
+                    <Button type="submit" className="w-full" isLoading={isSubmitting}>
+                      Submit Score as {activeExaminer.name}
+                    </Button>
+                  )
+                )}
+
+                {isReadOnly && (
+                  <div className="flex items-center gap-2 justify-center w-full py-2 rounded-lg bg-zinc-900/60 border border-zinc-800 text-zinc-500 text-xs font-medium">
+                    <Lock className="w-3.5 h-3.5" />
+                    Submission locked — Admins can only view examiner scores
+                  </div>
+                )}
               </form>
             </CardContent>
           </Card>

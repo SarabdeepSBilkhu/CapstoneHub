@@ -305,8 +305,10 @@ export function DashboardRoleActions({ user, project: initialProject, allProject
                     <CardTitle>Milestone Deliverables Status</CardTitle>
                     <CardDescription>Track submission links and supervisor feedback</CardDescription>
                   </div>
-                  <Link href={`/workspace/${project.id}`}>
-                    <Button variant="outline" size="sm">Go to Submissions</Button>
+                  <Link href={`/workspace/${project.id}?tab=MILESTONES`}>
+                    <Button variant="primary" size="sm">
+                      <Upload className="w-3.5 h-3.5 mr-1.5" /> Submit Deliverables
+                    </Button>
                   </Link>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -403,31 +405,30 @@ export function DashboardRoleActions({ user, project: initialProject, allProject
                 <CardTitle>Supervised Project Portfolio</CardTitle>
                 <CardDescription>Direct access to meeting logs, deliverable approvals, and reviews</CardDescription>
               </div>
-              <Link href={`/workspace/${project.id}`}>
-                <Button variant="primary" size="sm">
-                  <FolderGit2 className="w-4 h-4 mr-1.5" /> Open Supervision Workspace
-                </Button>
-              </Link>
             </CardHeader>
-            <CardContent>
-              <div className="p-4 rounded-xl bg-zinc-950/60 border border-zinc-800 space-y-3">
-                <div className="flex items-center justify-between">
-                  <h4 className="text-base font-bold text-white">{project.title}</h4>
-                  <Badge variant="success">{project.status}</Badge>
-                </div>
-                <p className="text-xs text-zinc-300 leading-relaxed">{project.problemStatement}</p>
-                <div className="border-t border-zinc-800 pt-3 flex flex-wrap items-center justify-between gap-2 text-xs">
-                  <span className="text-zinc-400">Allocated Team: {project.allocatedTeam?.name}</span>
-                  <div className="flex items-center gap-2">
-                    <Link href={`/workspace/${project.id}`}>
-                      <Button variant="outline" size="sm">Record Meeting Minutes</Button>
-                    </Link>
-                    <Link href={`/workspace/${project.id}`}>
-                      <Button variant="secondary" size="sm">Review Submissions</Button>
-                    </Link>
+            <CardContent className="space-y-4">
+              {allProjects
+                .filter((p) => p.supervisorId === user.id || p.supervisor?.id === user.id || p.supervisor?.email === user.email || allProjects.length === 1)
+                .map((p) => (
+                  <div key={p.id} className="p-4 rounded-xl bg-zinc-950/60 border border-zinc-800 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <h4 className="text-base font-bold text-white">{p.title}</h4>
+                      <Badge variant="success">{p.status}</Badge>
+                    </div>
+                    <p className="text-xs text-zinc-300 leading-relaxed">{p.problemStatement}</p>
+                    <div className="border-t border-zinc-800 pt-3 flex flex-wrap items-center justify-between gap-2 text-xs">
+                      <span className="text-zinc-400">Allocated Team: {p.allocatedTeam?.name || 'Unassigned'}</span>
+                      <div className="flex items-center gap-2">
+                        <Link href={`/workspace/${p.id}?tab=MEETINGS`}>
+                          <Button variant="outline" size="sm">Record Meeting Minutes</Button>
+                        </Link>
+                        <Link href={`/workspace/${p.id}?tab=MILESTONES`}>
+                          <Button variant="secondary" size="sm">Review Submissions</Button>
+                        </Link>
+                      </div>
+                    </div>
                   </div>
-                </div>
-              </div>
+                ))}
             </CardContent>
           </Card>
         </div>
@@ -544,9 +545,6 @@ export function DashboardRoleActions({ user, project: initialProject, allProject
                 <CardTitle>Your Sponsored Opportunity: {project.title}</CardTitle>
                 <CardDescription>Track university milestone completion and publication clearance</CardDescription>
               </div>
-              <Button variant="primary" size="sm" onClick={() => setShowCreateModal(true)}>
-                <PlusCircle className="w-4 h-4 mr-1.5" /> Post New Problem
-              </Button>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="p-4 rounded-xl bg-zinc-950/60 border border-zinc-800 space-y-3">
@@ -683,48 +681,64 @@ export function DashboardRoleActions({ user, project: initialProject, allProject
             <CardHeader>
               <CardTitle>Competing Team Applications Review & Allocation</CardTitle>
               <CardDescription>
-                Review proposals from 2 competing student teams for &quot;Smart Campus Navigation System&quot;
+                Review submissions and allocate projects across registered student cohorts
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                {project.applications?.map((app: any) => (
-                  <div key={app.id} className="p-4 rounded-xl bg-zinc-950/60 border border-zinc-800 space-y-2">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h4 className="font-semibold text-white text-sm">{app.teamName}</h4>
-                        <p className="text-[11px] text-zinc-400">Team Lead: {app.leaderName}</p>
+              {allProjects.some((p) => p.applications && p.applications.length > 0) ? (
+                <div className="space-y-6">
+                  {allProjects
+                    .filter((p) => p.applications && p.applications.length > 0)
+                    .map((p) => (
+                      <div key={p.id} className="space-y-3 border-b border-zinc-800 pb-4 last:border-0 last:pb-0">
+                        <div className="flex items-center justify-between">
+                          <h4 className="font-semibold text-white text-sm">Applications for: {p.title}</h4>
+                          <Badge variant="purple">{p.status}</Badge>
+                        </div>
+                        <div className="space-y-3">
+                          {p.applications.map((app: any) => (
+                            <div key={app.id} className="p-4 rounded-xl bg-zinc-950/60 border border-zinc-800 space-y-2">
+                              <div className="flex items-center justify-between">
+                                <div>
+                                  <h4 className="font-semibold text-white text-sm">{app.teamName}</h4>
+                                  <p className="text-[11px] text-zinc-400">Team Lead: {app.leaderName}</p>
+                                </div>
+                                <Badge
+                                  variant={
+                                    app.status === 'ACCEPTED'
+                                      ? 'success'
+                                      : app.status === 'REJECTED'
+                                      ? 'danger'
+                                      : 'warning'
+                                  }
+                                >
+                                  {app.status}
+                                </Badge>
+                              </div>
+                              <p className="text-xs text-zinc-300 bg-zinc-900/50 p-3 rounded-lg border border-zinc-800">
+                                <strong>Submitted Proposal:</strong> {app.proposal}
+                              </p>
+                              {(app.status === 'PENDING' || app.status === 'ACCEPTED') && (
+                                <div className="flex items-center gap-2 pt-2">
+                                  <Button
+                                    size="sm"
+                                    variant="primary"
+                                    isLoading={isAllocatingTeam}
+                                    onClick={() => handleAllocateTeam(p.id, app.id)}
+                                  >
+                                    {app.status === 'ACCEPTED' ? '✓ Allocated — Re-Allocate' : 'Accept Team & Allocate Project'}
+                                  </Button>
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
                       </div>
-                      <Badge
-                        variant={
-                          app.status === 'ACCEPTED'
-                            ? 'success'
-                            : app.status === 'REJECTED'
-                            ? 'danger'
-                            : 'warning'
-                        }
-                      >
-                        {app.status}
-                      </Badge>
-                    </div>
-                    <p className="text-xs text-zinc-300 bg-zinc-900/50 p-3 rounded-lg border border-zinc-800">
-                      <strong>Submitted Proposal:</strong> {app.proposal}
-                    </p>
-                    {(app.status === 'PENDING' || app.status === 'ACCEPTED') && (
-                      <div className="flex items-center gap-2 pt-2">
-                        <Button
-                          size="sm"
-                          variant="primary"
-                          isLoading={isAllocatingTeam}
-                          onClick={() => handleAllocateTeam(project.id, app.id)}
-                        >
-                          {app.status === 'ACCEPTED' ? '✓ Allocated — Re-Allocate' : 'Accept Team & Allocate Project'}
-                        </Button>
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
+                    ))}
+                </div>
+              ) : (
+                <p className="text-xs text-zinc-500 py-4 text-center">No pending cohort applications currently recorded.</p>
+              )}
             </CardContent>
           </Card>
         </div>
