@@ -17,17 +17,18 @@ export async function DELETE(req: NextRequest) {
       return NextResponse.json({ error: 'Missing project id' }, { status: 400 });
     }
 
+    // 1. Delete from PostgreSQL if database record exists
     try {
       await prisma.project.delete({
         where: { id: projectId },
       });
-    } catch {
-      await mockDb.init();
-      const index = mockDb.projects.findIndex((p) => p.id === projectId);
-      if (index !== -1) {
-        mockDb.projects.splice(index, 1);
-      }
+    } catch (dbErr: any) {
+      console.warn('Prisma delete notice:', dbErr.message);
     }
+
+    // 2. Always delete from mockDb and disk persistence to stay permanently synchronized
+    await mockDb.init();
+    mockDb.deleteProject(projectId);
 
     return NextResponse.json({ message: 'Project deleted successfully', projectId });
   } catch (error) {

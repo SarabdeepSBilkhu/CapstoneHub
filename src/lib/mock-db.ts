@@ -1,6 +1,15 @@
 // In-memory mock store that provides zero-setup, flawless local testing
 // and mirrors the full Smart Campus Navigation System 10-step lifecycle.
 import bcrypt from 'bcryptjs';
+import fs from 'fs';
+import path from 'path';
+
+const STORAGE_PATH = path.join(process.cwd(), '.mock-data.json');
+
+interface PersistedState {
+  deletedProjectIds?: string[];
+  customProjects?: MockProject[];
+}
 
 export interface MockUser {
   id: string;
@@ -105,10 +114,59 @@ export interface MockProject {
 class MemoryStore {
   users: MockUser[] = [];
   projects: MockProject[] = [];
+  deletedProjectIds: Set<string> = new Set();
+  customProjects: MockProject[] = [];
   initialized = false;
+
+  private saveToDisk() {
+    try {
+      const data: PersistedState = {
+        deletedProjectIds: Array.from(this.deletedProjectIds),
+        customProjects: this.customProjects,
+      };
+      fs.writeFileSync(STORAGE_PATH, JSON.stringify(data, null, 2), 'utf8');
+    } catch {
+      // Ignore disk write errors in restricted environments
+    }
+  }
+
+  private loadFromDisk(): PersistedState | null {
+    try {
+      if (fs.existsSync(STORAGE_PATH)) {
+        const raw = fs.readFileSync(STORAGE_PATH, 'utf8');
+        return JSON.parse(raw);
+      }
+    } catch {
+      // Ignore read errors
+    }
+    return null;
+  }
+
+  deleteProject(id: string) {
+    this.deletedProjectIds.add(id);
+    this.projects = this.projects.filter((p) => p.id !== id);
+    this.customProjects = this.customProjects.filter((p) => p.id !== id);
+    this.saveToDisk();
+  }
+
+  addProject(project: MockProject) {
+    this.projects.unshift(project);
+    this.customProjects.unshift(project);
+    this.deletedProjectIds.delete(project.id);
+    this.saveToDisk();
+  }
 
   async init() {
     if (this.initialized) return;
+
+    // Load persisted state from disk
+    const saved = this.loadFromDisk();
+    if (saved?.deletedProjectIds) {
+      this.deletedProjectIds = new Set(saved.deletedProjectIds);
+    }
+    if (saved?.customProjects) {
+      this.customProjects = saved.customProjects;
+    }
 
     const hash = await bcrypt.hash('password123', 10);
 
@@ -626,11 +684,19 @@ class MemoryStore {
       ],
     };
 
-    this.projects = [smartCampusProject, mentalHealthProject, blockchainProject, ecoTrackProject, secureVoteProject];
+    const defaultProjects = [smartCampusProject, mentalHealthProject, blockchainProject, ecoTrackProject, secureVoteProject];
+    
+    // Filter out any default project that has been marked as deleted
+    const activeDefaultProjects = defaultProjects.filter((p) => !this.deletedProjectIds.has(p.id));
+    
+    // Also filter any custom projects in case one was deleted
+    const activeCustomProjects = this.customProjects.filter((p) => !this.deletedProjectIds.has(p.id));
+
+    this.projects = [...activeCustomProjects, ...activeDefaultProjects];
     this.initialized = true;
   }
 }
 
 const globalStore = globalThis as unknown as { __capstoneStore?: MemoryStore };
 export const mockDb = globalStore.__capstoneStore || new MemoryStore();
-if (process.env.NODE_ENV !== 'production') globalStore.__capstoneStore = mockDb;
+globalStore.__capstoneStore = mockDb;

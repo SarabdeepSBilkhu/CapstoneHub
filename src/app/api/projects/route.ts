@@ -10,6 +10,7 @@ export async function GET(req: NextRequest) {
     const status = searchParams.get('status');
 
     let projects: any[] = [];
+    let isDbConnected = false;
 
     try {
       const where: any = {};
@@ -40,11 +41,12 @@ export async function GET(req: NextRequest) {
         },
         orderBy: { createdAt: 'desc' },
       });
+      isDbConnected = true;
     } catch {
-      // Fallback
+      isDbConnected = false;
     }
 
-    if (projects.length === 0) {
+    if (!isDbConnected) {
       await mockDb.init();
       projects = mockDb.projects.filter((p) => {
         if (category && category !== 'ALL' && p.category !== category) return false;

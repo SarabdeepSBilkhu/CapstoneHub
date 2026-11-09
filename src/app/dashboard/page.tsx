@@ -38,6 +38,7 @@ export default async function DashboardPage() {
   }
 
   let allProjects: any[] = [];
+  let isDbConnected = false;
 
   try {
     allProjects = await prisma.project.findMany({
@@ -55,14 +56,37 @@ export default async function DashboardPage() {
         evaluations: true,
       },
     });
+    isDbConnected = true;
   } catch {
-    // fallback
+    isDbConnected = false;
   }
 
-  if (allProjects.length === 0) {
+  if (!isDbConnected) {
     await mockDb.init();
     allProjects = mockDb.projects;
+  } else if (allProjects.length === 0) {
+    // DB is connected but has zero projects. Check if it was never initialized:
+    const userCount = await prisma.user.count().catch(() => 0);
+    if (userCount === 0) {
+      await mockDb.init();
+      allProjects = mockDb.projects;
+    }
   }
+
+  const fallbackProject = {
+    id: 'none',
+    title: 'No Active Projects Available',
+    description: 'No capstone projects are currently assigned or active.',
+    problemStatement: 'No active problem statement.',
+    category: 'INDUSTRY_SPONSORED',
+    status: 'ARCHIVED',
+    ipStatus: 'OPEN_SOURCE',
+    tags: [],
+    milestones: [],
+    supervisorLogs: [],
+    evaluations: [],
+    applications: [],
+  };
 
   // Find the project relevant to this user based on role:
   // 1. If student: allocated project where user is member, or allocatedTeam.id
@@ -84,7 +108,7 @@ export default async function DashboardPage() {
   });
 
   if (!activeProject) {
-    activeProject = allProjects.find((p) => p.id === 'smart-campus-nav') || allProjects[0];
+    activeProject = allProjects.find((p) => p.id === 'smart-campus-nav') || allProjects[0] || fallbackProject;
   }
 
   return (

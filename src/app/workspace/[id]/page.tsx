@@ -41,7 +41,7 @@ export default async function ProjectWorkspacePage({ params }: WorkspaceProps) {
 
   if (!project) {
     await mockDb.init();
-    project = mockDb.projects.find((p) => p.id === id || p.id === 'smart-campus-nav');
+    project = mockDb.projects.find((p) => p.id === id);
   }
 
   if (!project) {

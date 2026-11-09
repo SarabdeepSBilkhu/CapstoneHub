@@ -20,6 +20,7 @@ export default async function MarketplacePage({ searchParams }: MarketplaceProps
   const searchQuery = resolvedParams.q;
 
   let projects: any[] = [];
+  let isDbConnected = false;
 
   try {
     const where: any = {};
@@ -46,14 +47,23 @@ export default async function MarketplacePage({ searchParams }: MarketplaceProps
       },
       orderBy: { createdAt: 'desc' },
     });
+    isDbConnected = true;
   } catch {
-    // fallback
+    isDbConnected = false;
   }
 
-  if (projects.length === 0) {
+  if (!isDbConnected) {
     await mockDb.init();
     projects = mockDb.projects.filter((p) => {
       if (categoryFilter && categoryFilter !== 'ALL' && p.category !== categoryFilter) return false;
+      if (searchQuery) {
+        const q = searchQuery.toLowerCase();
+        const matches =
+          p.title.toLowerCase().includes(q) ||
+          p.description.toLowerCase().includes(q) ||
+          p.problemStatement.toLowerCase().includes(q);
+        if (!matches) return false;
+      }
       return true;
     });
   }

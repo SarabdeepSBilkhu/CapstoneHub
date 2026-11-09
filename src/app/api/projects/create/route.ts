@@ -74,7 +74,7 @@ export async function POST(req: NextRequest) {
         supervisorLogs: [],
         evaluations: [],
       };
-      mockDb.projects.unshift(newProj);
+      mockDb.addProject(newProj);
       project = newProj;
     }
 

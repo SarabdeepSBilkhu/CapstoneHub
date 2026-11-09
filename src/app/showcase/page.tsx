@@ -9,6 +9,7 @@ import { ExternalLink, CheckCircle2, Code, ShieldCheck, Award } from 'lucide-rea
 
 export default async function ShowcasePage() {
   let showcaseProjects: any[] = [];
+  let isDbConnected = false;
 
   try {
     showcaseProjects = await prisma.project.findMany({
@@ -27,11 +28,12 @@ export default async function ShowcasePage() {
       },
       orderBy: { updatedAt: 'desc' },
     });
+    isDbConnected = true;
   } catch {
-    // fallback
+    isDbConnected = false;
   }
 
-  if (showcaseProjects.length === 0) {
+  if (!isDbConnected) {
     await mockDb.init();
     showcaseProjects = mockDb.projects.filter((p) => p.isPublicShowcase);
   }
