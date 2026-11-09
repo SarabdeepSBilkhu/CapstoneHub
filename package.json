@@ -10,7 +10,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "seed": "node scripts/seed.js"
+    "seed": "node scripts/seed.js",
+    "test:crud": "node scripts/test-crud-live.js"
   },
   "dependencies": {
     "@hookform/resolvers": "^6.0.2",

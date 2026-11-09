@@ -19,9 +19,13 @@ export async function POST(req: NextRequest) {
     let application: any = null;
 
     try {
-      // Find or create team
+      // Find an existing unallocated team for this user, or create a new team for this cohort application
       let team = await prisma.team.findFirst({
-        where: { members: { some: { userId: user.id } } },
+        where: {
+          members: { some: { userId: user.id } },
+          allocatedProject: null, // only reuse if not already allocated to another project
+          ...(teamName ? { name: teamName } : {}),
+        },
       });
 
       if (!team) {
