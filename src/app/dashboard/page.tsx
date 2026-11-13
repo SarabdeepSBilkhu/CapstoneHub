@@ -1,33 +1,7 @@
-import React from 'react';
-import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { getCurrentUser } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { mockDb } from '@/lib/mock-db';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { formatDate } from '@/lib/utils';
-import {
-  FolderGit2,
-  Calendar,
-  CheckCircle2,
-  ArrowRight,
-  TrendingUp,
-  Award,
-  AlertCircle,
-  FileCheck2,
-  Upload,
-  PlusCircle,
-  Users,
-  ShieldCheck,
-  Building2,
-  FileText,
-  Activity,
-  Layers,
-  Sparkles,
-  ExternalLink,
-} from 'lucide-react';
 import { DashboardRoleActions } from './dashboard-role-actions';
 
 export default async function DashboardPage() {

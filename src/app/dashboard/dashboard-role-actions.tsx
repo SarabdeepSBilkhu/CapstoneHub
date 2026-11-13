@@ -7,27 +7,12 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/context/toast-context';
-import { formatDate } from '@/lib/utils';
 import {
   FolderGit2,
-  Calendar,
   CheckCircle2,
-  ArrowRight,
-  TrendingUp,
-  Award,
-  AlertCircle,
   FileCheck2,
   Upload,
   PlusCircle,
-  Users,
-  ShieldCheck,
-  Building2,
-  FileText,
-  Activity,
-  Layers,
-  Sparkles,
-  ExternalLink,
-  Code,
   Trash2,
 } from 'lucide-react';
 
@@ -63,7 +48,6 @@ export function DashboardRoleActions({ user, project: initialProject, allProject
   const progressPercent = totalMilestones > 0 ? Math.round((approvedMilestones / totalMilestones) * 100) : 0;
 
   // Real calculated admin statistics
-  const totalProjectsCount = allProjects.length;
   const pendingApprovalsCount = allProjects.filter((p) => p.status === 'PENDING_APPROVAL').length;
   const activeProjectsCount = allProjects.filter(
     (p) => p.status === 'APPROVED' || p.status === 'ALLOCATED' || p.status === 'IN_PROGRESS'

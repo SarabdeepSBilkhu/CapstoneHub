@@ -8,7 +8,6 @@ import {
   LayoutDashboard,
   Store,
   FileCheck2,
-  Users,
   Eye,
   LogOut,
 } from 'lucide-react';

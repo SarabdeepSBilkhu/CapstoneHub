@@ -1,11 +1,10 @@
-import React from 'react';
 import Link from 'next/link';
 import { prisma } from '@/lib/prisma';
 import { mockDb } from '@/lib/mock-db';
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { ExternalLink, CheckCircle2, Code, ShieldCheck, Award } from 'lucide-react';
+import { ExternalLink, CheckCircle2, Code, Award } from 'lucide-react';
 
 export default async function ShowcasePage() {
   let showcaseProjects: any[] = [];

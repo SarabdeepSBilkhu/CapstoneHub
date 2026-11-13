@@ -8,28 +8,20 @@ import { Input } from '@/components/ui/input';
 import { useToast } from '@/context/toast-context';
 import { formatDate } from '@/lib/utils';
 import {
-  FolderGit2,
+  Award,
   Calendar,
   CheckCircle2,
-  Clock,
-  ArrowRight,
   TrendingUp,
-  Award,
-  AlertCircle,
   FileCheck2,
   ExternalLink,
   Code,
   Building2,
   ShieldCheck,
-  User,
   Users,
-  Layers,
   FileText,
   Lock,
   PlusCircle,
   Upload,
-  MessageSquare,
-  Sparkles,
 } from 'lucide-react';
 import {
   RadarChart,

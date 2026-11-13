@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -14,7 +14,6 @@ import {
   Users,
   Bookmark,
   BookmarkCheck,
-  ExternalLink,
   ArrowRight,
   Send,
 } from 'lucide-react';

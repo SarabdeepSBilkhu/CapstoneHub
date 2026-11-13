@@ -1,11 +1,9 @@
-import React from 'react';
 import Link from 'next/link';
 import { prisma } from '@/lib/prisma';
 import { mockDb } from '@/lib/mock-db';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Store, PlusCircle, Search, ExternalLink, Users, Building, ShieldCheck } from 'lucide-react';
+import { PlusCircle } from 'lucide-react';
 import { getCurrentUser } from '@/lib/auth';
 import { MarketplaceClientFilter } from './marketplace-client';
 
