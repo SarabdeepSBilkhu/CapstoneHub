@@ -1,7 +1,6 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
-import { mockDb } from '@/lib/mock-db';
 import { getCurrentUser } from '@/lib/auth';
 import { ProjectWorkspaceInteractive } from './workspace-interactive';
 
@@ -13,35 +12,24 @@ export default async function ProjectWorkspacePage({ params }: WorkspaceProps) {
   const { id } = await params;
   const user = await getCurrentUser();
 
-  let project: any = null;
-
-  try {
-    project = await prisma.project.findUnique({
-      where: { id },
-      include: {
-        sponsor: true,
-        supervisor: true,
-        allocatedTeam: {
-          include: {
-            members: { include: { user: true } },
-          },
-        },
-        applications: true,
-        milestones: { orderBy: { dueDate: 'asc' } },
-        supervisorLogs: { orderBy: { meetingDate: 'desc' } },
-        evaluations: {
-          include: { examiner: true },
+  const project = await prisma.project.findUnique({
+    where: { id },
+    include: {
+      sponsor: true,
+      supervisor: true,
+      allocatedTeam: {
+        include: {
+          members: { include: { user: true } },
         },
       },
-    });
-  } catch {
-    // fallback
-  }
-
-  if (!project) {
-    await mockDb.init();
-    project = mockDb.projects.find((p) => p.id === id);
-  }
+      applications: true,
+      milestones: { orderBy: { dueDate: 'asc' } },
+      supervisorLogs: { orderBy: { meetingDate: 'desc' } },
+      evaluations: {
+        include: { examiner: true },
+      },
+    },
+  });
 
   if (!project) {
     notFound();

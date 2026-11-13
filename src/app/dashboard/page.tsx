@@ -1,7 +1,6 @@
 import { redirect } from 'next/navigation';
 import { getCurrentUser } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
-import { mockDb } from '@/lib/mock-db';
 import { DashboardRoleActions } from './dashboard-role-actions';
 
 export default async function DashboardPage() {
@@ -11,41 +10,21 @@ export default async function DashboardPage() {
     redirect('/login');
   }
 
-  let allProjects: any[] = [];
-  let isDbConnected = false;
-
-  try {
-    allProjects = await prisma.project.findMany({
-      include: {
-        sponsor: true,
-        supervisor: true,
-        allocatedTeam: {
-          include: {
-            members: { include: { user: true } },
-          },
+  const allProjects = await prisma.project.findMany({
+    include: {
+      sponsor: true,
+      supervisor: true,
+      allocatedTeam: {
+        include: {
+          members: { include: { user: true } },
         },
-        applications: true,
-        milestones: { orderBy: { dueDate: 'asc' } },
-        supervisorLogs: { orderBy: { meetingDate: 'desc' } },
-        evaluations: true,
       },
-    });
-    isDbConnected = true;
-  } catch {
-    isDbConnected = false;
-  }
-
-  if (!isDbConnected) {
-    await mockDb.init();
-    allProjects = mockDb.projects;
-  } else if (allProjects.length === 0) {
-    // DB is connected but has zero projects. Check if it was never initialized:
-    const userCount = await prisma.user.count().catch(() => 0);
-    if (userCount === 0) {
-      await mockDb.init();
-      allProjects = mockDb.projects;
-    }
-  }
+      applications: true,
+      milestones: { orderBy: { dueDate: 'asc' } },
+      supervisorLogs: { orderBy: { meetingDate: 'desc' } },
+      evaluations: true,
+    },
+  });
 
   const fallbackProject = {
     id: 'none',

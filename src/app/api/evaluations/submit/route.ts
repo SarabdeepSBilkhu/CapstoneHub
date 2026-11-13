@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getCurrentUser } from '@/lib/auth';
-import { mockDb } from '@/lib/mock-db';
 
 export async function POST(req: NextRequest) {
   try {
@@ -29,82 +28,40 @@ export async function POST(req: NextRequest) {
     const outcome = Math.min(15, Math.max(0, Number(projectOutcomeScore) || 0));
     const totalScore = Number((tech + problem + innov + doc + pres + outcome).toFixed(1));
 
-    let evaluation: any = null;
-
-    try {
-      evaluation = await prisma.evaluation.upsert({
-        where: {
-          projectId_examinerId: {
-            projectId,
-            examinerId: user.id,
-          },
-        },
-        update: {
-          technicalImplementationScore: tech,
-          problemUnderstandingScore: problem,
-          innovationScore: innov,
-          documentationScore: doc,
-          presentationScore: pres,
-          projectOutcomeScore: outcome,
-          totalScore,
-          comments,
-          isSubmitted: true,
-          submittedAt: new Date(),
-        },
-        create: {
+    const evaluation = await prisma.evaluation.upsert({
+      where: {
+        projectId_examinerId: {
           projectId,
           examinerId: user.id,
-          technicalImplementationScore: tech,
-          problemUnderstandingScore: problem,
-          innovationScore: innov,
-          documentationScore: doc,
-          presentationScore: pres,
-          projectOutcomeScore: outcome,
-          totalScore,
-          comments,
-          isSubmitted: true,
-          submittedAt: new Date(),
         },
-      });
-    } catch {
-      await mockDb.init();
-      const proj = mockDb.projects.find((p) => p.id === projectId);
-      if (proj) {
-        let existing = proj.evaluations.find((e) => e.examinerId === user.id);
-        if (!existing) {
-          existing = {
-            id: 'eval_' + Date.now(),
-            projectId,
-            examinerId: user.id,
-            examinerName: user.name,
-            examinerDepartment: user.department || 'Academic Committee',
-            technicalImplementationScore: tech,
-            problemUnderstandingScore: problem,
-            innovationScore: innov,
-            documentationScore: doc,
-            presentationScore: pres,
-            projectOutcomeScore: outcome,
-            totalScore,
-            comments: comments || '',
-            isSubmitted: true,
-            submittedAt: new Date().toISOString(),
-          };
-          proj.evaluations.push(existing);
-        } else {
-          existing.technicalImplementationScore = tech;
-          existing.problemUnderstandingScore = problem;
-          existing.innovationScore = innov;
-          existing.documentationScore = doc;
-          existing.presentationScore = pres;
-          existing.projectOutcomeScore = outcome;
-          existing.totalScore = totalScore;
-          existing.comments = comments;
-          existing.isSubmitted = true;
-          existing.submittedAt = new Date().toISOString();
-        }
-        evaluation = existing;
-      }
-    }
+      },
+      update: {
+        technicalImplementationScore: tech,
+        problemUnderstandingScore: problem,
+        innovationScore: innov,
+        documentationScore: doc,
+        presentationScore: pres,
+        projectOutcomeScore: outcome,
+        totalScore,
+        comments,
+        isSubmitted: true,
+        submittedAt: new Date(),
+      },
+      create: {
+        projectId,
+        examinerId: user.id,
+        technicalImplementationScore: tech,
+        problemUnderstandingScore: problem,
+        innovationScore: innov,
+        documentationScore: doc,
+        presentationScore: pres,
+        projectOutcomeScore: outcome,
+        totalScore,
+        comments,
+        isSubmitted: true,
+        submittedAt: new Date(),
+      },
+    });
 
     return NextResponse.json({
       evaluation,

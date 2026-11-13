@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getCurrentUser } from '@/lib/auth';
-import { mockDb } from '@/lib/mock-db';
 
 export async function POST(req: NextRequest) {
   try {
@@ -23,35 +22,17 @@ export async function POST(req: NextRequest) {
       }
 
       const { title, description, dueDate, weightage } = milestoneData;
-      let newMilestone: any = null;
 
-      try {
-        newMilestone = await prisma.milestone.create({
-          data: {
-            projectId,
-            title,
-            description,
-            dueDate: new Date(dueDate),
-            weightage: Number(weightage),
-            status: 'PENDING',
-          },
-        });
-      } catch {
-        await mockDb.init();
-        const proj = mockDb.projects.find((p) => p.id === projectId);
-        if (proj) {
-          newMilestone = {
-            id: 'ms_' + Date.now(),
-            projectId,
-            title,
-            description,
-            dueDate,
-            weightage: Number(weightage),
-            status: 'PENDING' as const,
-          };
-          proj.milestones.push(newMilestone);
-        }
-      }
+      const newMilestone = await prisma.milestone.create({
+        data: {
+          projectId,
+          title,
+          description,
+          dueDate: new Date(dueDate),
+          weightage: Number(weightage),
+          status: 'PENDING',
+        },
+      });
 
       return NextResponse.json({ milestone: newMilestone, message: 'Milestone created successfully' });
     }
@@ -63,28 +44,15 @@ export async function POST(req: NextRequest) {
       }
 
       const { milestoneId, deliverableUrl } = submissionData;
-      let updatedMilestone: any = null;
 
-      try {
-        updatedMilestone = await prisma.milestone.update({
-          where: { id: milestoneId },
-          data: {
-            deliverableUrl,
-            status: 'SUBMITTED',
-            submittedAt: new Date(),
-          },
-        });
-      } catch {
-        await mockDb.init();
-        const proj = mockDb.projects.find((p) => p.id === projectId);
-        const ms = proj?.milestones.find((m) => m.id === milestoneId);
-        if (ms) {
-          ms.deliverableUrl = deliverableUrl;
-          ms.status = 'SUBMITTED';
-          ms.submittedAt = new Date().toISOString();
-          updatedMilestone = ms;
-        }
-      }
+      const updatedMilestone = await prisma.milestone.update({
+        where: { id: milestoneId },
+        data: {
+          deliverableUrl,
+          status: 'SUBMITTED',
+          submittedAt: new Date(),
+        },
+      });
 
       return NextResponse.json({ milestone: updatedMilestone, message: 'Deliverable submitted for review' });
     }
@@ -96,28 +64,15 @@ export async function POST(req: NextRequest) {
       }
 
       const { milestoneId, status, feedback } = reviewData; // status: "APPROVED" or "REVISION_REQUESTED"
-      let updatedMilestone: any = null;
 
-      try {
-        updatedMilestone = await prisma.milestone.update({
-          where: { id: milestoneId },
-          data: {
-            status,
-            feedback,
-            reviewedAt: new Date(),
-          },
-        });
-      } catch {
-        await mockDb.init();
-        const proj = mockDb.projects.find((p) => p.id === projectId);
-        const ms = proj?.milestones.find((m) => m.id === milestoneId);
-        if (ms) {
-          ms.status = status;
-          ms.feedback = feedback;
-          ms.reviewedAt = new Date().toISOString();
-          updatedMilestone = ms;
-        }
-      }
+      const updatedMilestone = await prisma.milestone.update({
+        where: { id: milestoneId },
+        data: {
+          status,
+          feedback,
+          reviewedAt: new Date(),
+        },
+      });
 
       return NextResponse.json({
         milestone: updatedMilestone,

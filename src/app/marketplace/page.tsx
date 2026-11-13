@@ -1,6 +1,5 @@
 import Link from 'next/link';
 import { prisma } from '@/lib/prisma';
-import { mockDb } from '@/lib/mock-db';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { PlusCircle } from 'lucide-react';
@@ -17,54 +16,30 @@ export default async function MarketplacePage({ searchParams }: MarketplaceProps
   const categoryFilter = resolvedParams.category;
   const searchQuery = resolvedParams.q;
 
-  let projects: any[] = [];
-  let isDbConnected = false;
+  const where: any = {};
+  if (categoryFilter && categoryFilter !== 'ALL') {
+    where.category = categoryFilter;
+  }
+  if (searchQuery) {
+    where.OR = [
+      { title: { contains: searchQuery, mode: 'insensitive' } },
+      { description: { contains: searchQuery, mode: 'insensitive' } },
+      { problemStatement: { contains: searchQuery, mode: 'insensitive' } },
+    ];
+  }
 
-  try {
-    const where: any = {};
-    if (categoryFilter && categoryFilter !== 'ALL') {
-      where.category = categoryFilter;
-    }
-    if (searchQuery) {
-      where.OR = [
-        { title: { contains: searchQuery, mode: 'insensitive' } },
-        { description: { contains: searchQuery, mode: 'insensitive' } },
-        { problemStatement: { contains: searchQuery, mode: 'insensitive' } },
-      ];
-    }
-
-    projects = await prisma.project.findMany({
-      where,
-      include: {
-        sponsor: true,
-        supervisor: true,
-        allocatedTeam: {
-          include: { members: true },
-        },
-        applications: true,
+  const projects = await prisma.project.findMany({
+    where,
+    include: {
+      sponsor: true,
+      supervisor: true,
+      allocatedTeam: {
+        include: { members: true },
       },
-      orderBy: { createdAt: 'desc' },
-    });
-    isDbConnected = true;
-  } catch {
-    isDbConnected = false;
-  }
-
-  if (!isDbConnected) {
-    await mockDb.init();
-    projects = mockDb.projects.filter((p) => {
-      if (categoryFilter && categoryFilter !== 'ALL' && p.category !== categoryFilter) return false;
-      if (searchQuery) {
-        const q = searchQuery.toLowerCase();
-        const matches =
-          p.title.toLowerCase().includes(q) ||
-          p.description.toLowerCase().includes(q) ||
-          p.problemStatement.toLowerCase().includes(q);
-        if (!matches) return false;
-      }
-      return true;
-    });
-  }
+      applications: true,
+    },
+    orderBy: { createdAt: 'desc' },
+  });
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 space-y-8">

@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getCurrentUser } from '@/lib/auth';
-import { mockDb } from '@/lib/mock-db';
 
 export async function POST(req: NextRequest) {
   try {
@@ -16,58 +15,38 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Missing projectId or proposal statement' }, { status: 400 });
     }
 
-    let application: any = null;
+    // Find an existing unallocated team for this user, or create a new team for this cohort application
+    let team = await prisma.team.findFirst({
+      where: {
+        members: { some: { userId: user.id } },
+        allocatedProject: null, // only reuse if not already allocated to another project
+        ...(teamName ? { name: teamName } : {}),
+      },
+    });
 
-    try {
-      // Find an existing unallocated team for this user, or create a new team for this cohort application
-      let team = await prisma.team.findFirst({
-        where: {
-          members: { some: { userId: user.id } },
-          allocatedProject: null, // only reuse if not already allocated to another project
-          ...(teamName ? { name: teamName } : {}),
-        },
-      });
-
-      if (!team) {
-        team = await prisma.team.create({
-          data: {
-            name: teamName || `${user.name}'s Engineering Cohort`,
-            leaderId: user.id,
-            members: {
-              create: {
-                userId: user.id,
-                isLeader: true,
-              },
+    if (!team) {
+      team = await prisma.team.create({
+        data: {
+          name: teamName || `${user.name}'s Engineering Cohort`,
+          leaderId: user.id,
+          members: {
+            create: {
+              userId: user.id,
+              isLeader: true,
             },
           },
-        });
-      }
-
-      application = await prisma.projectApplication.create({
-        data: {
-          projectId,
-          teamId: team.id,
-          proposal,
-          status: 'PENDING',
         },
       });
-    } catch {
-      await mockDb.init();
-      const proj = mockDb.projects.find((p) => p.id === projectId);
-      if (proj) {
-        application = {
-          id: 'app_' + Date.now(),
-          projectId,
-          teamId: 'team_' + user.id,
-          teamName: teamName || `${user.name}'s Cohort`,
-          leaderName: user.name,
-          proposal,
-          status: 'PENDING' as const,
-          submittedAt: new Date().toISOString(),
-        };
-        proj.applications.push(application);
-      }
     }
+
+    const application = await prisma.projectApplication.create({
+      data: {
+        projectId,
+        teamId: team.id,
+        proposal,
+        status: 'PENDING',
+      },
+    });
 
     return NextResponse.json({
       application,

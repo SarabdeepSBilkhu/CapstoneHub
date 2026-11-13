@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getCurrentUser } from '@/lib/auth';
-import { mockDb } from '@/lib/mock-db';
 
 export async function POST(req: NextRequest) {
   try {
@@ -26,43 +25,20 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Missing required meeting notes or action items' }, { status: 400 });
     }
 
-    let log: any = null;
-
-    try {
-      log = await prisma.supervisorLog.create({
-        data: {
-          projectId,
-          supervisorId: user.id,
-          meetingDate: new Date(meetingDate || Date.now()),
-          attendees: attendees || 'Dr. Robert Martinez, Alex Chen, Maya Patel',
-          discussionPoints,
-          problemsIdentified,
-          decisions,
-          actionItems,
-          nextMeetingDate: nextMeetingDate ? new Date(nextMeetingDate) : undefined,
-          satisfactionRating: Number(satisfactionRating),
-        },
-      });
-    } catch {
-      await mockDb.init();
-      const proj = mockDb.projects.find((p) => p.id === projectId);
-      if (proj) {
-        log = {
-          id: 'log_' + Date.now(),
-          projectId,
-          supervisorId: user.id,
-          meetingDate: meetingDate || new Date().toISOString(),
-          attendees: attendees || 'Dr. Robert Martinez, Alex Chen, Maya Patel',
-          discussionPoints,
-          problemsIdentified,
-          decisions,
-          actionItems,
-          nextMeetingDate,
-          satisfactionRating: Number(satisfactionRating),
-        };
-        proj.supervisorLogs.unshift(log);
-      }
-    }
+    const log = await prisma.supervisorLog.create({
+      data: {
+        projectId,
+        supervisorId: user.id,
+        meetingDate: new Date(meetingDate || Date.now()),
+        attendees: attendees || 'Dr. Robert Martinez, Alex Chen, Maya Patel',
+        discussionPoints,
+        problemsIdentified,
+        decisions,
+        actionItems,
+        nextMeetingDate: nextMeetingDate ? new Date(nextMeetingDate) : undefined,
+        satisfactionRating: Number(satisfactionRating),
+      },
+    });
 
     return NextResponse.json({
       log,

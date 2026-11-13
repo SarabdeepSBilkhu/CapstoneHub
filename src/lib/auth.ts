@@ -2,7 +2,6 @@ import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import { cookies } from 'next/headers';
 import { prisma } from './prisma';
-import { mockDb } from './mock-db';
 import { Role } from '@prisma/client';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'capstone-super-secret-key-2026';
@@ -44,39 +43,20 @@ export async function getCurrentUser() {
     const payload = verifyToken(token);
     if (!payload?.userId) return null;
 
-    try {
-      const user = await prisma.user.findUnique({
-        where: { id: payload.userId },
-        select: {
-          id: true,
-          name: true,
-          email: true,
-          role: true,
-          department: true,
-          avatarUrl: true,
-          bio: true,
-        },
-      });
-      if (user) return user;
-    } catch {
-      // Fallback to mock store
-    }
+    const user = await prisma.user.findUnique({
+      where: { id: payload.userId },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        department: true,
+        avatarUrl: true,
+        bio: true,
+      },
+    });
 
-    await mockDb.init();
-    const mockUser = mockDb.users.find((u) => u.id === payload.userId || u.email === payload.email);
-    if (mockUser) {
-      return {
-        id: mockUser.id,
-        name: mockUser.name,
-        email: mockUser.email,
-        role: mockUser.role,
-        department: mockUser.department,
-        avatarUrl: undefined,
-        bio: mockUser.bio,
-      };
-    }
-
-    return null;
+    return user || null;
   } catch (error) {
     console.error('Failed to get current user:', error);
     return null;

@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getCurrentUser } from '@/lib/auth';
-import { mockDb } from '@/lib/mock-db';
 
 export async function POST(req: NextRequest) {
   try {
@@ -16,31 +15,16 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Missing projectId' }, { status: 400 });
     }
 
-    let project: any = null;
-
-    try {
-      project = await prisma.project.update({
-        where: { id: projectId },
-        data: {
-          isPublicShowcase: isPublicShowcase !== undefined ? Boolean(isPublicShowcase) : true,
-          status: 'COMPLETED',
-          showcaseSummary,
-          demoUrl,
-          githubUrl,
-        },
-      });
-    } catch {
-      await mockDb.init();
-      const proj = mockDb.projects.find((p) => p.id === projectId);
-      if (proj) {
-        proj.isPublicShowcase = isPublicShowcase !== undefined ? Boolean(isPublicShowcase) : true;
-        proj.status = 'COMPLETED';
-        if (showcaseSummary) proj.showcaseSummary = showcaseSummary;
-        if (demoUrl) proj.demoUrl = demoUrl;
-        if (githubUrl) proj.githubUrl = githubUrl;
-        project = proj;
-      }
-    }
+    const project = await prisma.project.update({
+      where: { id: projectId },
+      data: {
+        isPublicShowcase: isPublicShowcase !== undefined ? Boolean(isPublicShowcase) : true,
+        status: 'COMPLETED',
+        showcaseSummary,
+        demoUrl,
+        githubUrl,
+      },
+    });
 
     return NextResponse.json({
       project,

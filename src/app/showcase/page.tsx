@@ -1,41 +1,27 @@
 import Link from 'next/link';
 import { prisma } from '@/lib/prisma';
-import { mockDb } from '@/lib/mock-db';
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ExternalLink, CheckCircle2, Code, Award } from 'lucide-react';
 
 export default async function ShowcasePage() {
-  let showcaseProjects: any[] = [];
-  let isDbConnected = false;
-
-  try {
-    showcaseProjects = await prisma.project.findMany({
-      where: { isPublicShowcase: true },
-      include: {
-        sponsor: true,
-        supervisor: true,
-        allocatedTeam: {
-          include: {
-            members: {
-              include: { user: true },
-            },
+  const showcaseProjects = await prisma.project.findMany({
+    where: { isPublicShowcase: true },
+    include: {
+      sponsor: true,
+      supervisor: true,
+      allocatedTeam: {
+        include: {
+          members: {
+            include: { user: true },
           },
         },
-        evaluations: true,
       },
-      orderBy: { updatedAt: 'desc' },
-    });
-    isDbConnected = true;
-  } catch {
-    isDbConnected = false;
-  }
-
-  if (!isDbConnected) {
-    await mockDb.init();
-    showcaseProjects = mockDb.projects.filter((p) => p.isPublicShowcase);
-  }
+      evaluations: true,
+    },
+    orderBy: { updatedAt: 'desc' },
+  });
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 space-y-8">

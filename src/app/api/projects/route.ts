@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { mockDb } from '@/lib/mock-db';
 
 export async function GET(req: NextRequest) {
   try {
@@ -9,60 +8,34 @@ export async function GET(req: NextRequest) {
     const search = searchParams.get('search');
     const status = searchParams.get('status');
 
-    let projects: any[] = [];
-    let isDbConnected = false;
+    const where: any = {};
+    if (category && category !== 'ALL') where.category = category;
+    if (status && status !== 'ALL') where.status = status;
+    if (search) {
+      where.OR = [
+        { title: { contains: search, mode: 'insensitive' } },
+        { description: { contains: search, mode: 'insensitive' } },
+        { problemStatement: { contains: search, mode: 'insensitive' } },
+      ];
+    }
 
-    try {
-      const where: any = {};
-      if (category && category !== 'ALL') where.category = category;
-      if (status && status !== 'ALL') where.status = status;
-      if (search) {
-        where.OR = [
-          { title: { contains: search, mode: 'insensitive' } },
-          { description: { contains: search, mode: 'insensitive' } },
-          { problemStatement: { contains: search, mode: 'insensitive' } },
-        ];
-      }
-
-      projects = await prisma.project.findMany({
-        where,
-        include: {
-          sponsor: true,
-          supervisor: true,
-          allocatedTeam: {
-            include: {
-              members: { include: { user: true } },
-            },
+    const projects = await prisma.project.findMany({
+      where,
+      include: {
+        sponsor: true,
+        supervisor: true,
+        allocatedTeam: {
+          include: {
+            members: { include: { user: true } },
           },
-          applications: true,
-          milestones: { orderBy: { dueDate: 'asc' } },
-          supervisorLogs: { orderBy: { meetingDate: 'desc' } },
-          evaluations: true,
         },
-        orderBy: { createdAt: 'desc' },
-      });
-      isDbConnected = true;
-    } catch {
-      isDbConnected = false;
-    }
-
-    if (!isDbConnected) {
-      await mockDb.init();
-      projects = mockDb.projects.filter((p) => {
-        if (category && category !== 'ALL' && p.category !== category) return false;
-        if (status && status !== 'ALL' && p.status !== status) return false;
-        if (search) {
-          const q = search.toLowerCase();
-          return (
-            p.title.toLowerCase().includes(q) ||
-            p.description.toLowerCase().includes(q) ||
-            p.problemStatement.toLowerCase().includes(q) ||
-            p.tags.some((t) => t.toLowerCase().includes(q))
-          );
-        }
-        return true;
-      });
-    }
+        applications: true,
+        milestones: { orderBy: { dueDate: 'asc' } },
+        supervisorLogs: { orderBy: { meetingDate: 'desc' } },
+        evaluations: true,
+      },
+      orderBy: { createdAt: 'desc' },
+    });
 
     return NextResponse.json({ projects });
   } catch (error) {

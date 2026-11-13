@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getCurrentUser } from '@/lib/auth';
-import { mockDb } from '@/lib/mock-db';
 
 export async function POST(req: NextRequest) {
   try {
@@ -18,21 +17,10 @@ export async function POST(req: NextRequest) {
 
     const newStatus = action === 'APPROVE' ? 'APPROVED' : 'ARCHIVED';
 
-    let updatedProject: any = null;
-
-    try {
-      updatedProject = await prisma.project.update({
-        where: { id: projectId },
-        data: { status: newStatus },
-      });
-    } catch {
-      await mockDb.init();
-      const proj = mockDb.projects.find((p) => p.id === projectId);
-      if (proj) {
-        proj.status = newStatus;
-        updatedProject = proj;
-      }
-    }
+    const updatedProject = await prisma.project.update({
+      where: { id: projectId },
+      data: { status: newStatus },
+    });
 
     return NextResponse.json({
       project: updatedProject,
