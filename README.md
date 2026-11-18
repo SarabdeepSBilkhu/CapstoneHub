@@ -1,6 +1,6 @@
 # CapstoneHub: Final-Year Capstone & Industry-Sponsored Project Management Platform
 
-[![Next.js](https://img.shields.io/badge/Next.js-16.4.3-black?logo=next.js)](https://nextjs.org/)
+[![Next.js](https://img.shields.io/badge/Next.js-16.4.6-black?logo=next.js)](https://nextjs.org/)
 [![React](https://img.shields.io/badge/React-19.3.0-blue?logo=react)](https://react.dev/)
 [![JavaScript](https://img.shields.io/badge/JavaScript-ESNext-yellow?logo=javascript)](https://developer.mozilla.org/en-US/docs/Web/JavaScript)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-3.4-38bdf8?logo=tailwind-css)](https://tailwindcss.com/)
@@ -8,7 +8,7 @@
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Railway-4169E1?logo=postgresql)](https://railway.app/)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
-> **B.Tech CSE Capstone Project & Course Platform**  
+> **Capstone Project & Course Platform**  
 > Complete end-to-end capstone lifecycle governance platform: from industry problem formulation, committee gatekeeping, competitive cohort discovery, and supervisor check-in logs, to multi-examiner rubric scoring, originality compliance, and public accreditation showcase.
 
 **Live Production URL:** [https://capstonehub-production.up.railway.app](https://capstonehub-production.up.railway.app)  
