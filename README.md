@@ -2,7 +2,7 @@
 
 [![Next.js](https://img.shields.io/badge/Next.js-16.4.3-black?logo=next.js)](https://nextjs.org/)
 [![React](https://img.shields.io/badge/React-19.3.0-blue?logo=react)](https://react.dev/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5-blue?logo=typescript)](https://www.typescriptlang.org/)
+[![JavaScript](https://img.shields.io/badge/JavaScript-ESNext-yellow?logo=javascript)](https://developer.mozilla.org/en-US/docs/Web/JavaScript)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-3.4-38bdf8?logo=tailwind-css)](https://tailwindcss.com/)
 [![Prisma ORM](https://img.shields.io/badge/Prisma-6.6.0-2D3748?logo=prisma)](https://www.prisma.io/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Railway-4169E1?logo=postgresql)](https://railway.app/)
@@ -13,6 +13,15 @@
 
 **Live Production URL:** [https://capstonehub-production.up.railway.app](https://capstonehub-production.up.railway.app)  
 **Repository:** [https://github.com/SarabdeepSBilkhu/CapstoneHub.git](https://github.com/SarabdeepSBilkhu/CapstoneHub.git)
+
+---
+
+## 🎨 Minimalist & Eye-Friendly UI Design
+
+CapstoneHub features a clean, distraction-free aesthetic:
+- **Calm Light Palette**: Clean white surfaces, soft neutral backgrounds (`#f9fafb`), and subtle borders (`#e5e7eb`) that reduce eye fatigue during long grading sessions and reviews.
+- **Purposeful Color System**: Muted indigo primary accents paired with soft status badges (emerald for approved/on-track, amber for pending/reviews, rose for rejections/critical items).
+- **Responsive & Accessible**: Clean typography hierarchy, clear numerical rubric inputs, and uncluttered responsive card layouts across all viewport sizes.
 
 ---
 
@@ -56,41 +65,44 @@ CapstoneHub/
 ├── prisma/
 │   └── schema.prisma                     # PostgreSQL relational schema (7 models, 6 enums)
 ├── public/                               # Static assets & public showcase media
+├── scripts/
+│   ├── seed.js                           # Database seed script for PostgreSQL
+│   └── test-crud-live.js                 # Automated live database CRUD validation suite
 ├── src/
 │   ├── app/
 │   │   ├── api/
-│   │   │   ├── auth/                     # Login, Register, Session handlers
-│   │   │   ├── projects/                 # Create, Approve, Apply, Allocate, Delete, Publish endpoints
-│   │   │   ├── milestones/               # Create, Submit, Review milestone actions
-│   │   │   ├── meetings/                 # Supervisor meeting logs creation
-│   │   │   └── evaluations/              # 6-criteria rubric submissions
-│   │   ├── dashboard/                    # Role-based workspace & central institutional overview
+│   │   │   ├── auth/                     # Login, Register, Session API handlers
+│   │   │   ├── projects/                 # Create, Approve, Apply, Allocate, Delete endpoints
+│   │   │   ├── milestones/               # Submit, Review milestone action endpoints
+│   │   │   ├── meetings/                 # Supervisor meeting log creation endpoint
+│   │   │   └── evaluations/              # Multi-examiner rubric submission endpoints
+│   │   ├── dashboard/                    # Role-specific dashboard views & institutional stats
 │   │   ├── workspace/[id]/               # Dedicated project workspace (5 deep-linked tabs)
 │   │   ├── evaluation/                   # Multi-examiner rubric scoring tool & radar visualizer
 │   │   ├── marketplace/                  # Problem discovery, filters, search & team application modal
 │   │   ├── showcase/                     # Public showcase for accredited capstones
 │   │   ├── login/                        # 1-Click demo authentication persona switcher
-│   │   ├── loading.tsx                   # Route-level loading spinner
+│   │   ├── loading.jsx                   # Route-level loading indicator
 │   │   ├── globals.css                   # Tailwind directives & CSS variable tokens
-│   │   ├── layout.tsx                    # Root layout with Toast & Query Providers
-│   │   └── page.tsx                      # Platform landing page
+│   │   ├── layout.jsx                    # Root layout with Toast & Query Providers
+│   │   └── page.jsx                      # Minimalist platform landing page
 │   ├── components/
 │   │   ├── ui/                           # Button, Badge, Card, Input primitive components
-│   │   ├── navbar.tsx                    # Responsive navigation & role indicators
-│   │   ├── navigation-progress-bar.tsx   # Route transition progress indicator
-│   │   └── providers.tsx                 # React Query Provider
+│   │   ├── navbar.jsx                    # Responsive navigation & role indicators
+│   │   ├── navigation-progress-bar.jsx   # Route transition progress indicator
+│   │   └── providers.jsx                 # React Query Provider
 │   ├── context/
-│   │   └── toast-context.tsx             # React Context API toast notification system
+│   │   └── toast-context.jsx             # React Context API toast notification system
 │   └── lib/
-│       ├── auth.ts                       # JWT verification & session cookie helpers
-│       ├── mock-db.ts                    # Zero-config in-memory fallback store
-│       ├── prisma.ts                     # Singleton Prisma Client with connection resilience
-│       ├── store.ts                      # Zustand store (filter state & UI state)
-│       ├── utils.ts                      # clsx/tailwind-merge & date formatters
-│       └── validations.ts                # Zod schema definitions
+│       ├── auth.js                       # JWT verification & session cookie helpers
+│       ├── prisma.js                     # Singleton Prisma Client connected to PostgreSQL
+│       ├── store.js                      # Zustand store (filter state & UI state)
+│       ├── utils.js                      # clsx/tailwind-merge & date formatters
+│       └── validations.js                # Zod schema definitions
+├── jsconfig.json                         # Path alias mappings (@/*)
+├── next.config.js                        # Next.js configuration (ES Module)
 ├── postcss.config.js                     # PostCSS configuration
-├── tailwind.config.js                    # Tailwind CSS v3 theme configuration
-├── tsconfig.json                         # TypeScript strict configuration
+├── tailwind.config.js                    # Tailwind CSS configuration
 └── package.json                          # Full-stack dependencies & scripts
 ```
 
@@ -101,8 +113,7 @@ CapstoneHub/
 ### 1. Prerequisites
 - **Node.js** >= 20.x
 - **npm** >= 9.x
-- *(Optional)* PostgreSQL instance (local or Railway/Supabase/Neon).
-  > **Note:** CapstoneHub includes an automated zero-config fallback store (`mockDb`). If a database connection is not provided or fails, the platform automatically serves and mutates in-memory data, enabling instant evaluation without local database configuration.
+- **PostgreSQL** instance (local, Railway, Supabase, or Neon)
 
 ### 2. Installation
 ```bash
@@ -117,8 +128,8 @@ npm install
 ### 3. Environment Variables
 Create or verify your `.env` file in the root directory:
 ```env
-# Database connection string (optional - falls back to mockDb if omitted or unreachable)
-DATABASE_URL="postgresql://postgres:postgres@localhost:5432/capstonehub?schema=public"
+# PostgreSQL database connection string
+DATABASE_URL="postgresql://postgres:password@localhost:5432/capstonehub?schema=public"
 
 # Auth & JWT Configuration
 JWT_SECRET="super-secret-capstone-jwt-token-key-2026-production"
@@ -126,13 +137,25 @@ NEXTAUTH_SECRET="super-secret-capstone-jwt-token-key-2026-production"
 NEXT_PUBLIC_APP_URL="http://localhost:3000"
 ```
 
-### 4. Running the Development Server
+### 4. Database Setup & Seeding
+```bash
+# Push schema to PostgreSQL
+npx prisma db push
+
+# Seed test data (9 personas, 5 projects, milestones, logs, evaluations)
+npm run seed
+
+# (Optional) Run live CRUD verification suite
+npm run test:crud
+```
+
+### 5. Running the Development Server
 ```bash
 npm run dev
 ```
 Open **[http://localhost:3000](http://localhost:3000)** in your browser.
 
-### 5. Production Build
+### 6. Production Build
 ```bash
 npm run build
 npm run start
@@ -146,12 +169,13 @@ npm run start
    ```bash
    git push origin main
    ```
-2. Log in to [Railway](https://railway.app) and create a **New Project** connected to the GitHub repository.
+2. Log in to [Railway](https://railway.app) and link the GitHub repository.
 3. In the Railway dashboard:
    - Provision a **PostgreSQL** database service.
-   - Set the `DATABASE_URL` environment variable under your Next.js service settings.
-   - Add `JWT_SECRET` and `NEXT_PUBLIC_APP_URL` matching your domain.
-4. Railway will automatically build and deploy the container.
+   - Set the `DATABASE_URL` environment variable from the PostgreSQL connection string.
+   - Add `JWT_SECRET` and `NEXT_PUBLIC_APP_URL`.
+   - Run `npx prisma db push` and `npm run seed`.
+4. Railway will automatically build and deploy your container.
 
 ---
 

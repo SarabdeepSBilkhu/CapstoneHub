@@ -30,7 +30,6 @@ export default async function RootLayout({ children }) {
               </main>
               <footer className="border-t border-gray-200 bg-white py-6 text-center text-xs text-gray-400">
                 <p className="font-medium text-gray-500">CapstoneHub</p>
-                <p className="mt-0.5">Built with Next.js · Prisma · PostgreSQL · Tailwind CSS</p>
               </footer>
             </div>
           </ToastProvider>
