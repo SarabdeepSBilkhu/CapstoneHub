@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -19,15 +20,15 @@ import {
 const EXAMINER_DEFAULTS = [
   {
     tech: 24, problem: 14.5, innov: 14, doc: 14.5, pres: 14, outcome: 14.5,
-    comments: 'Exceptional system architecture. Multi-floor routing algorithm performs flawlessly with smooth SVG animations.',
+    comments: 'Exceptional system architecture and solid delivery.',
   },
   {
     tech: 23.5, problem: 14, innov: 14.5, doc: 14, pres: 14.5, outcome: 14,
-    comments: 'High practical utility. Wheelchair accessible routing demonstrates solid engineering empathy.',
+    comments: 'High practical utility. Clean implementation and solid defense.',
   },
   {
     tech: 23, problem: 14.5, innov: 13.5, doc: 14.5, pres: 14, outcome: 14,
-    comments: 'Clean JavaScript code and modular architecture. Deployment verified.',
+    comments: 'Clean code and modular architecture. Deployment verified.',
   },
 ];
 
@@ -39,9 +40,15 @@ const EXAMINERS = [
 
 export default function EvaluationPage() {
   const { toast } = useToast();
+  const searchParams = useSearchParams();
+  const initialProjectId = searchParams.get('projectId');
 
   const [currentUser, setCurrentUser] = useState(null);
   const [isLoadingUser, setIsLoadingUser] = useState(true);
+  const [projects, setProjects] = useState([]);
+  const [selectedProjectId, setSelectedProjectId] = useState(initialProjectId || '');
+  const [evaluationsMap, setEvaluationsMap] = useState({});
+
   const [myExaminerIndex, setMyExaminerIndex] = useState(null);
   const [viewingIndex, setViewingIndex] = useState(0);
 
@@ -56,6 +63,7 @@ export default function EvaluationPage() {
   const [outcomeScore, setOutcomeScore] = useState(EXAMINER_DEFAULTS[0].outcome);
   const [comments, setComments] = useState(EXAMINER_DEFAULTS[0].comments);
 
+  // 1. Fetch current user session
   useEffect(() => {
     fetch('/api/auth/session')
       .then((r) => r.json())
@@ -63,31 +71,85 @@ export default function EvaluationPage() {
         setCurrentUser(user);
         if (user?.role === 'EXAMINER') {
           const idx = EXAMINERS.findIndex((ex) => ex.email === user.email);
-          const resolvedIdx = (idx >= 0 ? idx : 0);
+          const resolvedIdx = idx >= 0 ? idx : 0;
           setMyExaminerIndex(resolvedIdx);
           setViewingIndex(resolvedIdx);
-          loadDefaults(resolvedIdx);
         } else if (user?.role === 'ADMIN') {
           setMyExaminerIndex(null);
           setViewingIndex(0);
-          loadDefaults(0);
         }
       })
       .catch(() => {})
       .finally(() => setIsLoadingUser(false));
   }, []);
 
-  function loadDefaults(idx) {
-    const d = EXAMINER_DEFAULTS[idx];
-    setTechScore(d.tech);
-    setProblemScore(d.problem);
-    setInnovScore(d.innov);
-    setDocScore(d.doc);
-    setPresScore(d.pres);
-    setOutcomeScore(d.outcome);
-    setComments(d.comments);
-    setSubmitted(false);
-  }
+  // 2. Fetch projects list
+  useEffect(() => {
+    fetch('/api/projects')
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.projects && data.projects.length > 0) {
+          setProjects(data.projects);
+          if (!selectedProjectId) {
+            const preferSmart = data.projects.find((p) => p.id === 'smart-campus-nav');
+            setSelectedProjectId(preferSmart ? preferSmart.id : data.projects[0].id);
+          }
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  // 3. Fetch evaluations whenever selectedProjectId changes
+  useEffect(() => {
+    if (!selectedProjectId) return;
+    fetch(`/api/evaluations?projectId=${selectedProjectId}`)
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.evaluations) {
+          const map = {};
+          data.evaluations.forEach((ev) => {
+            const examinerIdx = EXAMINERS.findIndex((ex) => ex.name === ev.examiner?.name || ex.id === ev.examinerId);
+            if (examinerIdx >= 0) {
+              map[examinerIdx] = ev;
+            }
+          });
+          setEvaluationsMap(map);
+          loadScoresForIndex(viewingIndex, map);
+        }
+      })
+      .catch(() => {
+        loadScoresForIndex(viewingIndex, {});
+      });
+  }, [selectedProjectId]);
+
+  const loadScoresForIndex = (idx, currentMap = evaluationsMap) => {
+    const existing = currentMap[idx];
+    if (existing) {
+      setTechScore(existing.technicalImplementationScore ?? EXAMINER_DEFAULTS[idx].tech);
+      setProblemScore(existing.problemUnderstandingScore ?? EXAMINER_DEFAULTS[idx].problem);
+      setInnovScore(existing.innovationScore ?? EXAMINER_DEFAULTS[idx].innov);
+      setDocScore(existing.documentationScore ?? EXAMINER_DEFAULTS[idx].doc);
+      setPresScore(existing.presentationScore ?? EXAMINER_DEFAULTS[idx].pres);
+      setOutcomeScore(existing.projectOutcomeScore ?? EXAMINER_DEFAULTS[idx].outcome);
+      setComments(existing.comments || EXAMINER_DEFAULTS[idx].comments);
+      setSubmitted(Boolean(existing.isSubmitted));
+    } else {
+      const d = EXAMINER_DEFAULTS[idx] || EXAMINER_DEFAULTS[0];
+      setTechScore(d.tech);
+      setProblemScore(d.problem);
+      setInnovScore(d.innov);
+      setDocScore(d.doc);
+      setPresScore(d.pres);
+      setOutcomeScore(d.outcome);
+      setComments(d.comments);
+      setSubmitted(false);
+    }
+  };
+
+  const handleSelectExaminerTab = (idx) => {
+    setViewingIndex(idx);
+    loadScoresForIndex(idx);
+  };
 
   const totalScore = Number(
     (techScore + problemScore + innovScore + docScore + presScore + outcomeScore).toFixed(1)
@@ -104,11 +166,19 @@ export default function EvaluationPage() {
 
   const handleSubmitEvaluation = async (e) => {
     e.preventDefault();
-    if (myExaminerIndex === null) return;
+    if (myExaminerIndex === null || myExaminerIndex !== viewingIndex) {
+      toast('You can only submit scores for your own examiner identity.', 'error');
+      return;
+    }
+    if (!selectedProjectId) {
+      toast('No project selected to evaluate.', 'error');
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       const payload = {
-        projectId: 'smart-campus-nav',
+        projectId: selectedProjectId,
         technicalImplementationScore: techScore,
         problemUnderstandingScore: problemScore,
         innovationScore: innovScore,
@@ -129,6 +199,14 @@ export default function EvaluationPage() {
 
       toast(resData.message || 'Evaluation recorded successfully!', 'success');
       setSubmitted(true);
+
+      // Update map
+      if (resData.evaluation) {
+        setEvaluationsMap((prev) => ({
+          ...prev,
+          [viewingIndex]: resData.evaluation,
+        }));
+      }
     } catch (err) {
       toast(err.message, 'error');
     } finally {
@@ -137,8 +215,10 @@ export default function EvaluationPage() {
   };
 
   const isAdminView = currentUser?.role === 'ADMIN';
-  const isReadOnly = isAdminView;
+  // Read-only if user is admin, or if examiner is viewing another examiner's tab
+  const isReadOnly = isAdminView || (myExaminerIndex !== null && myExaminerIndex !== viewingIndex);
   const activeExaminer = EXAMINERS[viewingIndex];
+  const activeProject = projects.find((p) => p.id === selectedProjectId);
 
   if (isLoadingUser) {
     return (
@@ -152,45 +232,54 @@ export default function EvaluationPage() {
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 space-y-6">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-gray-200 pb-5">
-        <div>
+        <div className="space-y-1">
           <div className="flex items-center gap-2 flex-wrap">
             <h1 className="text-2xl font-bold tracking-tight text-gray-900">Multi-Examiner Evaluation</h1>
             <Badge variant="purple">3 Evaluators</Badge>
             {isReadOnly && (
               <Badge variant="warning" className="flex items-center gap-1">
-                <Eye className="w-3 h-3" /> Admin Read-Only
+                <Eye className="w-3 h-3" /> {isAdminView ? 'Admin Read-Only' : 'Viewing Another Examiner (Read-Only)'}
               </Badge>
             )}
           </div>
-          <p className="mt-1 text-sm text-gray-500">
-            Evaluating <strong className="text-gray-900">Smart Campus Navigation System</strong> across 6 criteria.
-          </p>
+          <div className="flex items-center gap-2 pt-1 flex-wrap text-sm text-gray-600">
+            <span>Evaluating Project:</span>
+            {projects.length > 0 ? (
+              <select
+                value={selectedProjectId}
+                onChange={(e) => setSelectedProjectId(e.target.value)}
+                className="h-8 px-2.5 rounded-md border border-gray-300 bg-white text-xs font-semibold text-gray-900 focus:outline-none focus:ring-1 focus:ring-indigo-500 cursor-pointer"
+              >
+                {projects.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.title}
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <strong className="text-gray-900">{activeProject?.title || 'Loading project...'}</strong>
+            )}
+          </div>
         </div>
 
         {/* Examiner Tabs */}
         <div className="flex items-center gap-1 bg-gray-100 p-1 rounded-md border border-gray-200">
           {EXAMINERS.map((ex, idx) => {
-            const isLocked = !isAdminView && myExaminerIndex !== null && myExaminerIndex !== idx;
+            const isMyIdentity = myExaminerIndex === idx;
             return (
               <button
                 key={ex.name}
                 type="button"
-                disabled={isLocked}
-                onClick={() => {
-                  if (isLocked) return;
-                  setViewingIndex(idx);
-                  loadDefaults(idx);
-                }}
-                className={`px-3 py-1.5 rounded text-xs font-medium transition-colors ${
+                onClick={() => handleSelectExaminerTab(idx)}
+                className={`px-3 py-1.5 rounded text-xs font-medium transition-colors cursor-pointer ${
                   viewingIndex === idx
-                    ? 'bg-white text-gray-900 shadow-sm'
-                    : isLocked
-                    ? 'text-gray-400 cursor-not-allowed'
-                    : 'text-gray-600 hover:text-gray-900 cursor-pointer'
+                    ? 'bg-white text-gray-900 shadow-sm font-semibold'
+                    : 'text-gray-600 hover:text-gray-900'
                 }`}
               >
-                {isLocked && <Lock className="w-3 h-3 inline mr-1 text-gray-400" />}
+                {!isAdminView && !isMyIdentity && <Lock className="w-3 h-3 inline mr-1 text-gray-400" />}
                 Examiner {idx + 1}
+                {isMyIdentity && <span className="ml-1 text-[10px] text-indigo-600 font-bold">(You)</span>}
               </button>
             );
           })}
@@ -209,7 +298,9 @@ export default function EvaluationPage() {
               <CardDescription>
                 {activeExaminer.title} • {activeExaminer.dept}
                 {isReadOnly && (
-                  <span className="ml-2 text-amber-600 font-medium">— Read-only view</span>
+                  <span className="ml-2 text-amber-600 font-medium">
+                    — {isAdminView ? 'Read-only view' : 'Only this examiner can submit their score'}
+                  </span>
                 )}
               </CardDescription>
             </CardHeader>
@@ -313,7 +404,9 @@ export default function EvaluationPage() {
                 {isReadOnly && (
                   <div className="flex items-center gap-1.5 justify-center w-full py-2 rounded-md bg-gray-50 border border-gray-200 text-gray-500 text-xs">
                     <Lock className="w-3.5 h-3.5" />
-                    Admins can view but not edit scores
+                    {isAdminView
+                      ? 'Admins can view but not edit examiner scores'
+                      : `Scores can only be submitted when logged in as ${activeExaminer.name}`}
                   </div>
                 )}
               </form>
@@ -333,7 +426,7 @@ export default function EvaluationPage() {
                 <span className="text-xl text-gray-400 font-normal"> / 100</span>
               </div>
               <Badge variant="success" className="mt-2 text-xs px-2.5 py-0.5">
-                Distinction (A+)
+                {totalScore >= 85 ? 'Distinction (A+)' : totalScore >= 70 ? 'Merit (A)' : 'Pass'}
               </Badge>
             </CardContent>
           </Card>
