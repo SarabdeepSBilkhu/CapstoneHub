@@ -32,14 +32,14 @@ export default async function ProjectWorkspacePage({ params }) {
   }
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 space-y-8">
-      {/* Breadcrumb & Navigation */}
-      <div className="flex items-center gap-2 text-xs text-zinc-400">
-        <Link href="/dashboard" className="hover:text-white transition-colors">Dashboard</Link>
+    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 space-y-6">
+      {/* Breadcrumb */}
+      <div className="flex items-center gap-2 text-xs text-gray-500">
+        <Link href="/dashboard" className="hover:text-gray-900 transition-colors">Dashboard</Link>
         <span>/</span>
-        <Link href="/marketplace" className="hover:text-white transition-colors">Marketplace</Link>
+        <Link href="/marketplace" className="hover:text-gray-900 transition-colors">Marketplace</Link>
         <span>/</span>
-        <span className="text-zinc-200 truncate">{project.title}</span>
+        <span className="text-gray-800 truncate">{project.title}</span>
       </div>
 
       <ProjectWorkspaceInteractive project={project} currentUser={user} />

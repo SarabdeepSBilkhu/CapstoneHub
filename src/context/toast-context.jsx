@@ -14,7 +14,7 @@ export function ToastProvider({ children }) {
 
     setTimeout(() => {
       setToasts((prev) => prev.filter((t) => t.id !== id));
-    }, 4000);
+    }, 3500);
   }, []);
 
   const removeToast = (id) => {
@@ -28,26 +28,20 @@ export function ToastProvider({ children }) {
         {toasts.map((t) => (
           <div
             key={t.id}
-            className={`pointer-events-auto flex items-center justify-between p-4 rounded-xl shadow-lg border text-sm transition-all duration-300 animate-in slide-in-from-right ${
-              t.type === 'success'
-                ? 'bg-emerald-950/90 border-emerald-700/50 text-emerald-200'
-                : t.type === 'error'
-                ? 'bg-rose-950/90 border-rose-700/50 text-rose-200'
-                : 'bg-zinc-900/90 border-zinc-700/50 text-zinc-200'
-            }`}
+            className="pointer-events-auto flex items-center justify-between p-3.5 rounded-lg shadow-md border border-gray-200 bg-white text-sm text-gray-800 transition-all duration-200"
           >
-            <div className="flex items-center gap-3">
-              {t.type === 'success' && <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />}
-              {t.type === 'error' && <AlertCircle className="w-5 h-5 text-rose-400 shrink-0" />}
-              {t.type === 'info' && <Info className="w-5 h-5 text-sky-400 shrink-0" />}
-              <span>{t.message}</span>
+            <div className="flex items-center gap-2.5">
+              {t.type === 'success' && <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />}
+              {t.type === 'error' && <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />}
+              {t.type === 'info' && <Info className="w-4 h-4 text-blue-600 shrink-0" />}
+              <span className="text-xs font-medium">{t.message}</span>
             </div>
             <button
               onClick={() => removeToast(t.id)}
-              className="p-1 rounded-md hover:bg-white/10 transition-colors ml-2"
+              className="p-1 rounded hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors ml-2 cursor-pointer"
               aria-label="Dismiss toast"
             >
-              <X className="w-4 h-4 opacity-70 hover:opacity-100" />
+              <X className="w-3.5 h-3.5" />
             </button>
           </div>
         ))}

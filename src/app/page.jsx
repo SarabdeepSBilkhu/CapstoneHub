@@ -1,149 +1,77 @@
 import Link from 'next/link';
-import { Button } from '@/components/ui/button';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import {
-  GraduationCap,
-  FileCheck2,
-  Users,
-  ShieldCheck,
-  Award,
-  ArrowRight,
-} from 'lucide-react';
+import { GraduationCap, FileCheck2, Users, ShieldCheck, Award, ArrowRight } from 'lucide-react';
+
+const roles = [
+  { icon: Users,        label: 'Students',         desc: 'Apply for projects, submit deliverables, track milestones.' },
+  { icon: GraduationCap,label: 'Supervisors',       desc: 'Log meeting minutes, review deliverables, approve progress.' },
+  { icon: FileCheck2,   label: 'Examiners',         desc: 'Score projects via rubric-based criteria with radar charts.' },
+  { icon: ShieldCheck,  label: 'Industry Sponsors', desc: 'Post problem statements, monitor teams, manage IP.' },
+  { icon: Award,        label: 'Administrators',    desc: 'Oversee cohorts, assign examiners, publish showcase.' },
+];
 
 export default function HomePage() {
   return (
-    <div className="flex flex-col min-h-screen">
-      {/* Hero Section */}
-      <section className="relative overflow-hidden px-4 pt-20 pb-16 sm:px-6 lg:px-8 bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(99,102,241,0.15),rgba(255,255,255,0))]">
-        <div className="mx-auto max-w-5xl text-center space-y-6">
-          <h1 className="text-4xl sm:text-6xl font-extrabold tracking-tight text-white leading-tight">
-            Final-Year Capstone & Industry Project <br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-purple-300 to-sky-400">
-              Management Platform
-            </span>
+    <div className="flex flex-col">
+      {/* Hero */}
+      <section className="border-b border-gray-200 bg-white px-4 pt-20 pb-16 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-3xl text-center space-y-6">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-gray-200 text-xs text-gray-500 bg-gray-50">
+            <GraduationCap className="w-3.5 h-3.5 text-indigo-500" />
+            Capstone Project Management
+          </div>
+          <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-gray-900 leading-tight">
+            Manage your capstone<br />from start to finish
           </h1>
-          <p className="mx-auto max-w-2xl text-base sm:text-lg text-zinc-400 leading-relaxed">
-            Eliminate chaotic project allocation, opaque faculty supervision, and subjective grading. CapstoneHub
-            connects student teams, industry sponsors, supervisors, and external examiners in a unified, rubric-driven
-            ecosystem.
+          <p className="text-base text-gray-500 max-w-xl mx-auto leading-relaxed">
+            Connect student teams, industry sponsors, supervisors, and examiners in one unified platform.
           </p>
-
-          <div className="flex flex-wrap items-center justify-center gap-4 pt-4">
-            <Link href="/login">
-              <Button size="lg" className="px-6 font-semibold shadow-lg shadow-indigo-600/20">
-                Explore Platform <ArrowRight className="w-4 h-4 ml-1.5" />
-              </Button>
+          <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
+            <Link
+              href="/login"
+              className="inline-flex items-center gap-2 px-5 py-2.5 bg-indigo-600 text-white text-sm font-medium rounded-md hover:bg-indigo-700 transition-colors"
+            >
+              Get started <ArrowRight className="w-4 h-4" />
             </Link>
-            <Link href="/marketplace">
-              <Button variant="outline" size="lg" className="px-6">
-                Browse Problem Statements
-              </Button>
-            </Link>
-            <Link href="/showcase">
-              <Button variant="secondary" size="lg" className="px-6">
-                Public Showcase
-              </Button>
+            <Link
+              href="/marketplace"
+              className="inline-flex items-center px-5 py-2.5 border border-gray-300 text-gray-700 text-sm font-medium rounded-md hover:bg-gray-50 transition-colors"
+            >
+              Browse projects
             </Link>
           </div>
         </div>
       </section>
 
-      {/* 5 Core Stakeholder Personas */}
-      <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8 space-y-12">
-        <div className="text-center space-y-2">
-          <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-white">
-            End-to-End Governance Across 5 Dedicated Roles
-          </h2>
-          <p className="text-sm text-zinc-400">Designed precisely to address the core requirements in the course curriculum.</p>
+      {/* Roles */}
+      <section className="px-4 py-16 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full">
+        <div className="mb-10 text-center">
+          <h2 className="text-xl font-semibold text-gray-900">Five dedicated roles</h2>
+          <p className="mt-1 text-sm text-gray-500">Each role has its own tailored workflow and permissions.</p>
         </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
-          <Card className="hover:border-indigo-500/50 transition-colors">
-            <CardHeader className="pb-3">
-              <div className="h-10 w-10 rounded-xl bg-indigo-600/20 text-indigo-400 flex items-center justify-center mb-2">
-                <Users className="w-5 h-5" />
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+          {roles.map(({ icon: Icon, label, desc }) => (
+            <div key={label} className="rounded-lg border border-gray-200 bg-white p-5 hover:border-indigo-200 hover:shadow-sm transition-all">
+              <div className="mb-3 inline-flex h-8 w-8 items-center justify-center rounded-md bg-indigo-50 text-indigo-600">
+                <Icon className="w-4 h-4" />
               </div>
-              <CardTitle className="text-base">Students</CardTitle>
-            </CardHeader>
-            <CardContent className="text-xs text-zinc-400">
-              Form multi-disciplinary teams, apply for problem statements, upload versioned deliverables, and check similarity scores.
-            </CardContent>
-          </Card>
-
-          <Card className="hover:border-sky-500/50 transition-colors">
-            <CardHeader className="pb-3">
-              <div className="h-10 w-10 rounded-xl bg-sky-600/20 text-sky-400 flex items-center justify-center mb-2">
-                <GraduationCap className="w-5 h-5" />
-              </div>
-              <CardTitle className="text-base">Supervisors</CardTitle>
-            </CardHeader>
-            <CardContent className="text-xs text-zinc-400">
-              Weekly meeting minutes, action-item tracking, deliverable review cycles, and approval gatekeeping.
-            </CardContent>
-          </Card>
-
-          <Card className="hover:border-purple-500/50 transition-colors">
-            <CardHeader className="pb-3">
-              <div className="h-10 w-10 rounded-xl bg-purple-600/20 text-purple-400 flex items-center justify-center mb-2">
-                <FileCheck2 className="w-5 h-5" />
-              </div>
-              <CardTitle className="text-base">Examiners</CardTitle>
-            </CardHeader>
-            <CardContent className="text-xs text-zinc-400">
-              Criteria-based 5-part rubric scoring (problem, methodology, implementation, originality, viva) with radar visualizers.
-            </CardContent>
-          </Card>
-
-          <Card className="hover:border-amber-500/50 transition-colors">
-            <CardHeader className="pb-3">
-              <div className="h-10 w-10 rounded-xl bg-amber-600/20 text-amber-400 flex items-center justify-center mb-2">
-                <ShieldCheck className="w-5 h-5" />
-              </div>
-              <CardTitle className="text-base">Industry Sponsors</CardTitle>
-            </CardHeader>
-            <CardContent className="text-xs text-zinc-400">
-              Publish enterprise challenge statements, monitor milestones, manage NDA agreements, and assert intellectual property.
-            </CardContent>
-          </Card>
-
-          <Card className="hover:border-emerald-500/50 transition-colors">
-            <CardHeader className="pb-3">
-              <div className="h-10 w-10 rounded-xl bg-emerald-600/20 text-emerald-400 flex items-center justify-center mb-2">
-                <Award className="w-5 h-5" />
-              </div>
-              <CardTitle className="text-base">Administrators</CardTitle>
-            </CardHeader>
-            <CardContent className="text-xs text-zinc-400">
-              Cohort-wide analytics, examiner assignment, deadline scheduling, and public showcase approval for accreditation.
-            </CardContent>
-          </Card>
+              <h3 className="text-sm font-semibold text-gray-900 mb-1">{label}</h3>
+              <p className="text-xs text-gray-500 leading-relaxed">{desc}</p>
+            </div>
+          ))}
         </div>
       </section>
 
-      {/* Tech Stack Banner */}
-      <section className="border-t border-zinc-900 bg-zinc-950/50 py-12">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 text-center space-y-4">
-          <p className="text-xs font-semibold uppercase tracking-widest text-zinc-500">
-            Technology Stack & Curriculum Competencies
-          </p>
-          <div className="flex flex-wrap justify-center items-center gap-6 text-sm font-medium text-zinc-400">
-            <span>Next.js App Router</span>
-            <span>•</span>
-            <span>React 19 & TypeScript</span>
-            <span>•</span>
-            <span>Tailwind CSS</span>
-            <span>•</span>
-            <span>Prisma ORM & PostgreSQL</span>
-            <span>•</span>
-            <span>React Query</span>
-            <span>•</span>
-            <span>Zod & React Hook Form</span>
-            <span>•</span>
-            <span>Zustand</span>
-            <span>•</span>
-            <span>Recharts</span>
-            <span>•</span>
-            <span>Railway Cloud Ready</span>
+      {/* Stack */}
+      <section className="border-t border-gray-200 bg-gray-50 py-10">
+        <div className="mx-auto max-w-4xl px-4 sm:px-6 text-center">
+          <p className="text-xs uppercase tracking-widest text-gray-400 mb-4 font-medium">Technology Stack</p>
+          <div className="flex flex-wrap justify-center items-center gap-x-6 gap-y-2 text-sm text-gray-500">
+            {['Next.js App Router', 'React 19', 'Tailwind CSS', 'Prisma ORM', 'PostgreSQL', 'React Query', 'Zod', 'Railway'].map((t, i, arr) => (
+              <span key={t} className="flex items-center gap-6">
+                {t}
+                {i < arr.length - 1 && <span className="text-gray-300">·</span>}
+              </span>
+            ))}
           </div>
         </div>
       </section>

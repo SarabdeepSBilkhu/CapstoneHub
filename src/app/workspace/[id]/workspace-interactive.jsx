@@ -148,7 +148,6 @@ export function ProjectWorkspaceInteractive({ project: initialProject, currentUs
     }
   };
 
-  // Derive Multi-Examiner Radar Scores
   const evaluations = project.evaluations || [];
   const submittedEvals = evaluations.filter((e) => e.isSubmitted);
   const avgTotalScore =
@@ -241,135 +240,134 @@ export function ProjectWorkspaceInteractive({ project: initialProject, currentUs
   ];
 
   return (
-    <div className="space-y-8">
-      {/* Project Title Banner & Status Badges */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-zinc-800 pb-6">
-        <div className="space-y-2">
+    <div className="space-y-6">
+      {/* Title & Status */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-gray-200 pb-5">
+        <div className="space-y-1.5">
           <div className="flex items-center gap-2">
-            <Badge variant="warning">{project.category.replace('_', ' ')}</Badge>
+            <Badge variant="warning">{project.category.replace(/_/g, ' ')}</Badge>
             <Badge variant={project.status === 'COMPLETED' ? 'success' : 'purple'}>
-              {project.status.replace('_', ' ')}
+              {project.status.replace(/_/g, ' ')}
             </Badge>
-            <Badge variant="purple">NDA: {project.ipStatus}</Badge>
+            <Badge variant="default">NDA: {project.ipStatus}</Badge>
           </div>
-          <h1 className="text-3xl font-extrabold tracking-tight text-white">{project.title}</h1>
-          <p className="text-xs text-zinc-400">
-            Sponsored by <strong className="text-zinc-200">{project.sponsor?.name || 'Elena Rostova (Steerpath)'}</strong> •
-            Supervised by <strong className="text-zinc-200">{project.supervisor?.name || 'Dr. Robert Martinez'}</strong>
+          <h1 className="text-2xl font-bold tracking-tight text-gray-900">{project.title}</h1>
+          <p className="text-xs text-gray-500">
+            Sponsored by <strong className="text-gray-800">{project.sponsor?.name || 'Elena Rostova (Steerpath)'}</strong> •{' '}
+            Supervised by <strong className="text-gray-800">{project.supervisor?.name || 'Dr. Robert Martinez'}</strong>
           </p>
         </div>
 
-        {/* Action Link to Public Showcase or Repository */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
           {project.githubUrl && (
             <a
               href={project.githubUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-xs font-medium text-zinc-200 transition-colors"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-white border border-gray-200 hover:bg-gray-50 text-xs font-medium text-gray-700 transition-colors"
             >
-              <Code className="w-4 h-4" /> Source Code
+              <Code className="w-3.5 h-3.5" /> Source
             </a>
           )}
           {project.isPublicShowcase && (
             <a
               href="/showcase"
-              className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-emerald-950/80 hover:bg-emerald-900 border border-emerald-800/60 text-xs font-semibold text-emerald-300 transition-colors"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-emerald-50 border border-emerald-200 text-xs font-medium text-emerald-700 hover:bg-emerald-100 transition-colors"
             >
-              <ExternalLink className="w-4 h-4" /> View in Public Showcase
+              <ExternalLink className="w-3.5 h-3.5" /> Public Showcase
             </a>
           )}
         </div>
       </div>
 
-      {/* KPI Stats Bar */}
+      {/* KPI Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="border-indigo-900/30 bg-indigo-950/20">
-          <CardContent className="pt-6">
+        <Card className="shadow-none border-gray-200">
+          <CardContent className="pt-5">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs font-medium text-zinc-400">Milestone Progress</p>
-                <h4 className="mt-1 text-2xl font-bold text-white">{progressPercent}%</h4>
+                <p className="text-xs font-medium text-gray-500">Milestone Progress</p>
+                <h4 className="mt-1 text-2xl font-bold text-gray-900">{progressPercent}%</h4>
               </div>
-              <div className="p-2.5 rounded-lg bg-indigo-600/20 text-indigo-400">
-                <TrendingUp className="w-5 h-5" />
+              <div className="p-2 rounded-md bg-indigo-50 text-indigo-600">
+                <TrendingUp className="w-4 h-4" />
               </div>
             </div>
-            <div className="mt-3 w-full bg-zinc-800 rounded-full h-1.5 overflow-hidden">
-              <div className="bg-indigo-500 h-1.5 rounded-full transition-all duration-500" style={{ width: `${progressPercent}%` }} />
+            <div className="mt-3 w-full bg-gray-100 rounded-full h-1.5 overflow-hidden">
+              <div className="bg-indigo-600 h-1.5 rounded-full" style={{ width: `${progressPercent}%` }} />
             </div>
-            <p className="mt-2 text-[11px] text-zinc-400">{approvedMilestones} of {totalMilestones} Milestones Approved</p>
+            <p className="mt-2 text-[11px] text-gray-500">{approvedMilestones} of {totalMilestones} Approved</p>
           </CardContent>
         </Card>
 
-        <Card className="overflow-hidden">
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between gap-2 min-w-0">
-              <div className="min-w-0 flex-1">
-                <p className="text-xs font-medium text-zinc-400">Multi-Examiner Avg</p>
-                <h4 className="mt-1 text-2xl font-bold text-white">
-                  {avgTotalScore} <span className="text-xs font-normal text-zinc-400">/ 100</span>
+        <Card className="shadow-none border-gray-200">
+          <CardContent className="pt-5">
+            <div className="flex items-center justify-between gap-2">
+              <div>
+                <p className="text-xs font-medium text-gray-500">Examiner Avg</p>
+                <h4 className="mt-1 text-2xl font-bold text-gray-900">
+                  {avgTotalScore} <span className="text-xs font-normal text-gray-400">/ 100</span>
                 </h4>
               </div>
-              <div className="shrink-0 p-2.5 rounded-lg bg-purple-600/20 text-purple-400">
-                <Award className="w-5 h-5" />
+              <div className="p-2 rounded-md bg-purple-50 text-purple-600">
+                <Award className="w-4 h-4" />
               </div>
             </div>
-            <p className="mt-3 text-xs text-purple-400 flex items-center gap-1.5">
-              <CheckCircle2 className="w-3.5 h-3.5" /> 3 Independent Evaluators
+            <p className="mt-3 text-xs text-purple-600 flex items-center gap-1">
+              <CheckCircle2 className="w-3.5 h-3.5" /> 3 Evaluators
             </p>
           </CardContent>
         </Card>
 
-        <Card className="overflow-hidden">
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between gap-2 min-w-0">
-              <div className="min-w-0 flex-1">
-                <p className="text-xs font-medium text-zinc-400">Originality Report</p>
-                <h4 className="mt-1 text-2xl font-bold text-white">{project.similarityScore || 12.0}%</h4>
+        <Card className="shadow-none border-gray-200">
+          <CardContent className="pt-5">
+            <div className="flex items-center justify-between gap-2">
+              <div>
+                <p className="text-xs font-medium text-gray-500">Originality Report</p>
+                <h4 className="mt-1 text-2xl font-bold text-gray-900">{project.similarityScore || 12.0}%</h4>
               </div>
-              <div className="shrink-0 p-2.5 rounded-lg bg-emerald-600/20 text-emerald-400">
-                <CheckCircle2 className="w-5 h-5" />
+              <div className="p-2 rounded-md bg-emerald-50 text-emerald-600">
+                <CheckCircle2 className="w-4 h-4" />
               </div>
             </div>
-            <p className="mt-3 text-xs text-emerald-400">Similarity Verified (&lt;15%)</p>
+            <p className="mt-3 text-xs text-emerald-600">Similarity Verified (&lt;15%)</p>
           </CardContent>
         </Card>
 
-        <Card className="overflow-hidden">
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between gap-3 min-w-0">
-              <div className="min-w-0 flex-1">
-                <p className="text-xs font-medium text-zinc-400">Allocated Team</p>
-                <h4 className="mt-1 text-base font-bold text-white truncate" title={project.allocatedTeam?.name || 'GeoPath Innovators'}>
+        <Card className="shadow-none border-gray-200">
+          <CardContent className="pt-5">
+            <div className="flex items-center justify-between gap-2">
+              <div>
+                <p className="text-xs font-medium text-gray-500">Allocated Team</p>
+                <h4 className="mt-1 text-base font-bold text-gray-900 truncate">
                   {project.allocatedTeam?.name || 'GeoPath Innovators'}
                 </h4>
               </div>
-              <div className="shrink-0 p-2.5 rounded-lg bg-sky-600/20 text-sky-400">
-                <Users className="w-5 h-5" />
+              <div className="p-2 rounded-md bg-blue-50 text-blue-600">
+                <Users className="w-4 h-4" />
               </div>
             </div>
-            <p className="mt-3 text-xs text-sky-400">2 Active Undergraduate Engineers</p>
+            <p className="mt-3 text-xs text-blue-600">2 Active Members</p>
           </CardContent>
         </Card>
       </div>
 
-      {/* Navigation Tabs (Step 5 Project Workspace) */}
-      <div className="flex items-center gap-2 border-b border-zinc-800 pb-2 overflow-x-auto text-xs font-semibold">
+      {/* Tabs */}
+      <div className="flex items-center gap-1 border-b border-gray-200 pb-2 overflow-x-auto text-xs font-medium">
         {[
-          { id: 'OVERVIEW', label: '1. Project Overview & Timeline' },
-          { id: 'MILESTONES', label: '2. Milestones & Deliverables' },
-          { id: 'MEETINGS', label: '3. Supervisor Meeting Logs' },
-          { id: 'EVALUATIONS', label: '4. Multi-Examiner Rubrics' },
-          { id: 'ORIGINALITY_IP', label: '5. Originality & IP Governance' },
+          { id: 'OVERVIEW', label: '1. Overview' },
+          { id: 'MILESTONES', label: '2. Milestones' },
+          { id: 'MEETINGS', label: '3. Meeting Logs' },
+          { id: 'EVALUATIONS', label: '4. Rubrics' },
+          { id: 'ORIGINALITY_IP', label: '5. Originality & IP' },
         ].map((tab) => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`px-4 py-2 rounded-lg transition-colors whitespace-nowrap cursor-pointer ${
+            className={`px-3 py-1.5 rounded-md transition-colors whitespace-nowrap cursor-pointer ${
               activeTab === tab.id
-                ? 'bg-zinc-800 text-white font-bold'
-                : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900'
+                ? 'bg-gray-900 text-white font-medium'
+                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
             }`}
           >
             {tab.label}
@@ -377,46 +375,43 @@ export function ProjectWorkspaceInteractive({ project: initialProject, currentUs
         ))}
       </div>
 
-      {/* ============================================================ */}
-      {/* TAB 1: OVERVIEW & TIMELINE                                    */}
-      {/* ============================================================ */}
+      {/* TAB 1: OVERVIEW */}
       {activeTab === 'OVERVIEW' && (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Case Study & Engineering Problem Statement</CardTitle>
-                <CardDescription>Industry challenge originated from Steerpath smart campus wayfinding</CardDescription>
+            <Card className="shadow-none border-gray-200">
+              <CardHeader className="pb-3">
+                <CardTitle>Problem Statement</CardTitle>
+                <CardDescription>Industry challenge from Steerpath smart campus wayfinding</CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4 text-xs text-zinc-300 leading-relaxed">
+              <CardContent className="space-y-3 text-xs text-gray-700 leading-relaxed">
                 <p>{project.problemStatement}</p>
                 {project.objectives && (
-                  <div className="p-3 rounded-lg bg-zinc-950/60 border border-zinc-800">
-                    <p className="font-semibold text-white mb-1">Key Project Objectives:</p>
-                    <p className="whitespace-pre-line text-zinc-400">{project.objectives}</p>
+                  <div className="p-3 rounded-lg bg-gray-50 border border-gray-200">
+                    <p className="font-semibold text-gray-900 mb-1">Key Objectives:</p>
+                    <p className="whitespace-pre-line text-gray-600">{project.objectives}</p>
                   </div>
                 )}
                 {project.expectedOutcomes && (
-                  <div className="p-3 rounded-lg bg-zinc-950/60 border border-zinc-800">
-                    <p className="font-semibold text-white mb-1">Expected Deliverable Outcomes:</p>
-                    <p className="text-zinc-400">{project.expectedOutcomes}</p>
+                  <div className="p-3 rounded-lg bg-gray-50 border border-gray-200">
+                    <p className="font-semibold text-gray-900 mb-1">Expected Deliverables:</p>
+                    <p className="text-gray-600">{project.expectedOutcomes}</p>
                   </div>
                 )}
               </CardContent>
             </Card>
 
-            {/* Required Technologies & Skills */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Required Technology Stack</CardTitle>
-                <CardDescription>Frameworks, languages, and spatial libraries used</CardDescription>
+            <Card className="shadow-none border-gray-200">
+              <CardHeader className="pb-3">
+                <CardTitle>Technology Stack</CardTitle>
+                <CardDescription>Frameworks, languages, and libraries</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-1.5">
                   {project.requiredSkills?.map((skill) => (
                     <span
                       key={skill}
-                      className="px-3 py-1 rounded-md bg-indigo-950/40 border border-indigo-900/60 text-xs font-semibold text-indigo-300"
+                      className="px-2.5 py-1 rounded bg-indigo-50 border border-indigo-100 text-xs font-medium text-indigo-700"
                     >
                       {skill}
                     </span>
@@ -426,44 +421,43 @@ export function ProjectWorkspaceInteractive({ project: initialProject, currentUs
             </Card>
           </div>
 
-          {/* Sidebar Stakeholders */}
           <div className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Project Stakeholders</CardTitle>
+            <Card className="shadow-none border-gray-200">
+              <CardHeader className="pb-3">
+                <CardTitle>Stakeholders</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4 text-xs">
-                <div className="flex items-center gap-3 p-3 rounded-lg bg-zinc-950/60 border border-zinc-800">
-                  <div className="p-2 rounded-lg bg-amber-500/10 text-amber-400">
+              <CardContent className="space-y-3 text-xs">
+                <div className="flex items-center gap-3 p-3 rounded-lg border border-gray-200 bg-gray-50">
+                  <div className="p-2 rounded bg-amber-100 text-amber-700">
                     <Building2 className="w-4 h-4" />
                   </div>
                   <div>
-                    <p className="font-semibold text-white">{project.sponsor?.name || 'Elena Rostova'}</p>
-                    <p className="text-[11px] text-zinc-400">Industry Sponsor (Steerpath)</p>
+                    <p className="font-semibold text-gray-900">{project.sponsor?.name || 'Elena Rostova'}</p>
+                    <p className="text-[11px] text-gray-500">Industry Sponsor (Steerpath)</p>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-3 p-3 rounded-lg bg-zinc-950/60 border border-zinc-800">
-                  <div className="p-2 rounded-lg bg-sky-500/10 text-sky-400">
+                <div className="flex items-center gap-3 p-3 rounded-lg border border-gray-200 bg-gray-50">
+                  <div className="p-2 rounded bg-blue-100 text-blue-700">
                     <ShieldCheck className="w-4 h-4" />
                   </div>
                   <div>
-                    <p className="font-semibold text-white">{project.supervisor?.name || 'Dr. Robert Martinez'}</p>
-                    <p className="text-[11px] text-zinc-400">Faculty Supervisor</p>
+                    <p className="font-semibold text-gray-900">{project.supervisor?.name || 'Dr. Robert Martinez'}</p>
+                    <p className="text-[11px] text-gray-500">Faculty Supervisor</p>
                   </div>
                 </div>
 
-                <div className="p-3 rounded-lg bg-zinc-950/60 border border-zinc-800 space-y-2">
-                  <p className="font-semibold text-white">Allocated Engineering Cohort</p>
-                  <p className="text-zinc-400 font-medium">{project.allocatedTeam?.name || 'GeoPath Innovators'}</p>
-                  <div className="pt-2 divide-y divide-zinc-800/80">
-                    <div className="py-1 flex justify-between">
-                      <span className="text-zinc-300">Alex Chen</span>
-                      <Badge variant="purple">Team Lead</Badge>
+                <div className="p-3 rounded-lg border border-gray-200 bg-gray-50 space-y-2">
+                  <p className="font-semibold text-gray-900">Allocated Team</p>
+                  <p className="text-gray-600 font-medium">{project.allocatedTeam?.name || 'GeoPath Innovators'}</p>
+                  <div className="pt-2 divide-y divide-gray-200">
+                    <div className="py-1 flex justify-between items-center">
+                      <span className="text-gray-700">Alex Chen</span>
+                      <Badge variant="purple">Lead</Badge>
                     </div>
-                    <div className="py-1 flex justify-between">
-                      <span className="text-zinc-300">Maya Patel</span>
-                      <span className="text-zinc-500">Core Developer</span>
+                    <div className="py-1 flex justify-between items-center">
+                      <span className="text-gray-700">Maya Patel</span>
+                      <span className="text-gray-400">Developer</span>
                     </div>
                   </div>
                 </div>
@@ -473,293 +467,258 @@ export function ProjectWorkspaceInteractive({ project: initialProject, currentUs
         </div>
       )}
 
-      {/* ============================================================ */}
-      {/* TAB 2: MILESTONES & DELIVERABLES (Step 6)                      */}
-      {/* ============================================================ */}
+      {/* TAB 2: MILESTONES */}
       {activeTab === 'MILESTONES' && (
-        <div className="space-y-6">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <div>
-                <CardTitle>Milestones & Deliverable Roadmap</CardTitle>
-                <CardDescription>
-                  Strict weighted stages with supervisor review and revision workflows
-                </CardDescription>
-              </div>
-              <Badge variant="success">All 5 Stages Configured</Badge>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {project.milestones?.map((m, idx) => (
-                  <div
-                    key={m.id}
-                    className="p-4 rounded-xl bg-zinc-950/60 border border-zinc-800 space-y-3"
-                  >
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                      <div className="flex items-center gap-2">
-                        <span className="flex h-6 w-6 items-center justify-center rounded-full bg-zinc-800 text-xs font-bold text-zinc-300">
-                          {idx + 1}
-                        </span>
-                        <h4 className="font-semibold text-white text-sm">{m.title}</h4>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Badge
-                          variant={
-                            m.status === 'APPROVED'
-                              ? 'success'
-                              : m.status === 'SUBMITTED'
-                              ? 'info'
-                              : m.status === 'REVISION_REQUESTED'
-                              ? 'danger'
-                              : 'warning'
-                          }
-                        >
-                          {m.status.replace('_', ' ')}
-                        </Badge>
-                        <span className="text-xs text-zinc-400 font-semibold">{m.weightage}% Weight</span>
-                      </div>
-                    </div>
-
-                    <p className="text-xs text-zinc-400 pl-8">{m.description}</p>
-
-                    <div className="flex flex-wrap items-center justify-between gap-3 pl-8 pt-2 border-t border-zinc-800/80 text-xs">
-                      <span className="flex items-center gap-1.5 text-zinc-500">
-                        <Calendar className="w-3.5 h-3.5" /> Due: {formatDate(m.dueDate)}
+        <Card className="shadow-none border-gray-200">
+          <CardHeader className="flex flex-row items-center justify-between pb-3">
+            <div>
+              <CardTitle>Milestone Roadmap</CardTitle>
+              <CardDescription>Track deliverable submissions and supervisor reviews</CardDescription>
+            </div>
+            <Badge variant="success">All Stages Configured</Badge>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {project.milestones?.map((m, idx) => (
+                <div key={m.id} className="p-3.5 rounded-lg border border-gray-200 bg-white space-y-2.5">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      <span className="flex h-5 w-5 items-center justify-center rounded-full bg-gray-100 text-xs font-semibold text-gray-700">
+                        {idx + 1}
                       </span>
+                      <h4 className="font-semibold text-gray-900 text-sm">{m.title}</h4>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Badge
+                        variant={
+                          m.status === 'APPROVED'
+                            ? 'success'
+                            : m.status === 'SUBMITTED'
+                            ? 'info'
+                            : m.status === 'REVISION_REQUESTED'
+                            ? 'danger'
+                            : 'warning'
+                        }
+                      >
+                        {m.status.replace(/_/g, ' ')}
+                      </Badge>
+                      <span className="text-xs text-gray-500 font-medium">{m.weightage}%</span>
+                    </div>
+                  </div>
 
-                      {/* Deliverable Link if available */}
-                      {m.deliverableUrl && (
-                        <a
-                          href={m.deliverableUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex items-center gap-1 text-indigo-400 hover:text-indigo-300 font-medium"
-                        >
-                          <ExternalLink className="w-3 h-3" /> Submitted Link
-                        </a>
-                      )}
+                  <p className="text-xs text-gray-600 pl-7">{m.description}</p>
 
-                      {/* Student Action: Submit or Resubmit */}
-                      {role === 'STUDENT' && (
-                        <div>
-                          {selectedMilestoneId === m.id ? (
+                  <div className="flex flex-wrap items-center justify-between gap-2 pl-7 pt-2 border-t border-gray-100 text-xs">
+                    <span className="flex items-center gap-1.5 text-gray-500">
+                      <Calendar className="w-3.5 h-3.5" /> Due: {formatDate(m.dueDate)}
+                    </span>
+
+                    {m.deliverableUrl && (
+                      <a
+                        href={m.deliverableUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-1 text-indigo-600 hover:text-indigo-800 font-medium"
+                      >
+                        <ExternalLink className="w-3 h-3" /> Submitted Link
+                      </a>
+                    )}
+
+                    {role === 'STUDENT' && (
+                      <div>
+                        {selectedMilestoneId === m.id ? (
+                          <div className="flex items-center gap-2">
+                            <Input
+                              placeholder="https://github.com/..."
+                              value={deliverableUrl}
+                              onChange={(e) => setDeliverableUrl(e.target.value)}
+                              className="h-8 text-xs w-64"
+                            />
+                            <Button
+                              size="sm"
+                              isLoading={isSubmittingDeliverable}
+                              onClick={() => handleSubmitDeliverable(m.id)}
+                            >
+                              Send
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => setSelectedMilestoneId('')}
+                            >
+                              Cancel
+                            </Button>
+                          </div>
+                        ) : (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => {
+                              setSelectedMilestoneId(m.id);
+                              if (m.deliverableUrl) setDeliverableUrl(m.deliverableUrl);
+                            }}
+                          >
+                            <Upload className="w-3.5 h-3.5 mr-1" />
+                            {m.deliverableUrl ? 'Update' : 'Submit'}
+                          </Button>
+                        )}
+                      </div>
+                    )}
+
+                    {(role === 'SUPERVISOR' || role === 'ADMIN') && (
+                      <div>
+                        {reviewMilestoneId === m.id ? (
+                          <div className="flex flex-col gap-2 p-2 rounded-md bg-gray-50 border border-gray-200">
+                            <Input
+                              placeholder="Feedback..."
+                              value={supervisorFeedback}
+                              onChange={(e) => setSupervisorFeedback(e.target.value)}
+                              className="h-8 text-xs w-80"
+                            />
                             <div className="flex items-center gap-2">
-                              <Input
-                                placeholder="https://github.com/..."
-                                value={deliverableUrl}
-                                onChange={(e) => setDeliverableUrl(e.target.value)}
-                                className="h-8 text-xs w-64"
-                              />
                               <Button
                                 size="sm"
-                                isLoading={isSubmittingDeliverable}
-                                onClick={() => handleSubmitDeliverable(m.id)}
+                                variant="primary"
+                                onClick={() => handleReviewDeliverable(m.id, 'APPROVED')}
                               >
-                                Send
+                                Approve
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="danger"
+                                onClick={() => handleReviewDeliverable(m.id, 'REVISION_REQUESTED')}
+                              >
+                                Request Revision
                               </Button>
                               <Button
                                 size="sm"
                                 variant="ghost"
-                                onClick={() => setSelectedMilestoneId('')}
+                                onClick={() => setReviewMilestoneId('')}
                               >
                                 Cancel
                               </Button>
                             </div>
-                          ) : (
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => {
-                                setSelectedMilestoneId(m.id);
-                                if (m.deliverableUrl) setDeliverableUrl(m.deliverableUrl);
-                              }}
-                            >
-                              <Upload className="w-3.5 h-3.5 mr-1" />
-                              {m.deliverableUrl ? 'Update Deliverable' : 'Submit Deliverable'}
-                            </Button>
-                          )}
-                        </div>
-                      )}
-
-                      {/* Supervisor Action: Review / Approve / Request Revision */}
-                      {(role === 'SUPERVISOR' || role === 'ADMIN') && (
-                        <div>
-                          {reviewMilestoneId === m.id ? (
-                            <div className="flex flex-col gap-2 p-2 rounded-lg bg-zinc-900 border border-zinc-700">
-                              <Input
-                                placeholder="Enter supervisor feedback..."
-                                value={supervisorFeedback}
-                                onChange={(e) => setSupervisorFeedback(e.target.value)}
-                                className="h-8 text-xs w-80"
-                              />
-                              <div className="flex items-center gap-2">
-                                <Button
-                                  size="sm"
-                                  variant="primary"
-                                  onClick={() => handleReviewDeliverable(m.id, 'APPROVED')}
-                                >
-                                  Approve
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  variant="danger"
-                                  onClick={() => handleReviewDeliverable(m.id, 'REVISION_REQUESTED')}
-                                >
-                                  Request Revision
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  variant="ghost"
-                                  onClick={() => setReviewMilestoneId('')}
-                                >
-                                  Cancel
-                                </Button>
-                              </div>
-                            </div>
-                          ) : (
-                            <Button
-                              size="sm"
-                              variant="secondary"
-                              onClick={() => {
-                                setReviewMilestoneId(m.id);
-                                if (m.feedback) setSupervisorFeedback(m.feedback);
-                              }}
-                            >
-                              <FileCheck2 className="w-3.5 h-3.5 mr-1" /> Review Deliverable
-                            </Button>
-                          )}
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Supervisor Feedback Callout */}
-                    {m.feedback && (
-                      <div className="ml-8 text-xs text-indigo-300 bg-indigo-950/40 p-2.5 rounded-lg border border-indigo-900/60">
-                        <strong className="text-white">Supervisor Feedback:</strong> {m.feedback}
+                          </div>
+                        ) : (
+                          <Button
+                            size="sm"
+                            variant="secondary"
+                            onClick={() => {
+                              setReviewMilestoneId(m.id);
+                              if (m.feedback) setSupervisorFeedback(m.feedback);
+                            }}
+                          >
+                            <FileCheck2 className="w-3.5 h-3.5 mr-1" /> Review
+                          </Button>
+                        )}
                       </div>
                     )}
                   </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+
+                  {m.feedback && (
+                    <div className="ml-7 text-xs text-indigo-700 bg-indigo-50 p-2.5 rounded border border-indigo-100">
+                      <strong>Feedback:</strong> {m.feedback}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
       )}
 
-      {/* ============================================================ */}
-      {/* TAB 3: SUPERVISOR MEETING LOGS (Step 7)                       */}
-      {/* ============================================================ */}
+      {/* TAB 3: MEETING LOGS */}
       {activeTab === 'MEETINGS' && (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Recorded Supervisor Meeting Logs</CardTitle>
-                <CardDescription>
-                  Directly addresses invisible supervision by recording attendees, decisions, and action items
-                </CardDescription>
+            <Card className="shadow-none border-gray-200">
+              <CardHeader className="pb-3">
+                <CardTitle>Supervisor Meeting Minutes</CardTitle>
+                <CardDescription>Official meeting logs, discussions, and agreed action items</CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-3">
                 {project.supervisorLogs?.map((log) => (
-                  <div key={log.id} className="p-4 rounded-xl bg-zinc-950/60 border border-zinc-800 space-y-3">
+                  <div key={log.id} className="p-3.5 rounded-lg border border-gray-200 bg-white space-y-2.5">
                     <div className="flex items-center justify-between text-xs">
-                      <span className="font-semibold text-white">
-                        Meeting Date: {formatDate(log.meetingDate)}
+                      <span className="font-semibold text-gray-900">
+                        Date: {formatDate(log.meetingDate)}
                       </span>
-                      <span className="text-amber-400 font-medium">
+                      <span className="text-amber-600 font-medium">
                         Rating: {'★'.repeat(log.satisfactionRating || 5)}
                       </span>
                     </div>
 
-                    <div className="text-xs text-zinc-400">
+                    <div className="text-xs text-gray-500">
                       <strong>Attendees:</strong> {log.attendees}
                     </div>
 
-                    <div className="text-xs text-zinc-300 bg-zinc-900/40 p-3 rounded-lg border border-zinc-800 space-y-1">
-                      <p className="font-semibold text-white">Discussion & Problems Identified:</p>
+                    <div className="text-xs text-gray-700 bg-gray-50 p-2.5 rounded border border-gray-200 space-y-1">
+                      <p className="font-semibold text-gray-900">Discussion Points:</p>
                       <p>{log.discussionPoints}</p>
-                      {log.problemsIdentified && (
-                        <p className="text-rose-300 mt-1">
-                          <strong>Problem:</strong> {log.problemsIdentified}
-                        </p>
-                      )}
-                      {log.decisions && (
-                        <p className="text-emerald-300 mt-1">
-                          <strong>Decision:</strong> {log.decisions}
-                        </p>
-                      )}
                     </div>
 
-                    <div className="text-xs text-indigo-300 bg-indigo-950/30 p-3 rounded-lg border border-indigo-900/40 space-y-1">
-                      <p className="font-semibold text-indigo-200">Agreed Action Items:</p>
+                    <div className="text-xs text-indigo-700 bg-indigo-50 p-2.5 rounded border border-indigo-100 space-y-0.5">
+                      <p className="font-semibold text-indigo-900">Action Items:</p>
                       <p className="whitespace-pre-line">{log.actionItems}</p>
                     </div>
-
-                    {log.nextMeetingDate && (
-                      <p className="text-[11px] text-zinc-500">
-                        Next Scheduled Sync: {formatDate(log.nextMeetingDate)}
-                      </p>
-                    )}
                   </div>
                 ))}
               </CardContent>
             </Card>
           </div>
 
-          {/* Supervisor New Log Form */}
           <div className="space-y-6">
             {(role === 'SUPERVISOR' || role === 'ADMIN') ? (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-base flex items-center gap-1.5">
-                    <PlusCircle className="w-4 h-4 text-sky-400" /> Record Bi-Weekly Meeting
+              <Card className="shadow-none border-gray-200">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-sm flex items-center gap-1.5">
+                    <PlusCircle className="w-4 h-4 text-blue-600" /> Record Meeting Log
                   </CardTitle>
-                  <CardDescription>Log minutes and assign student action items</CardDescription>
+                  <CardDescription>Log minutes and assign team action items</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <form onSubmit={handleRecordMeeting} className="space-y-3 text-xs">
                     <Input
-                      label="Meeting Date"
+                      label="Date"
                       type="date"
                       value={meetingDate}
                       onChange={(e) => setMeetingDate(e.target.value)}
                     />
                     <div>
-                      <label className="block text-[11px] font-semibold text-zinc-300 uppercase mb-1">
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
                         Discussion Points
                       </label>
                       <textarea
                         rows={3}
                         value={discussionPoints}
                         onChange={(e) => setDiscussionPoints(e.target.value)}
-                        className="w-full rounded-lg border border-zinc-700 bg-zinc-950 p-2.5 text-zinc-200"
+                        className="w-full rounded-md border border-gray-300 p-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
                       />
                     </div>
                     <div>
-                      <label className="block text-[11px] font-semibold text-zinc-300 uppercase mb-1">
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
                         Agreed Action Items
                       </label>
                       <textarea
                         rows={3}
                         value={actionItems}
                         onChange={(e) => setActionItems(e.target.value)}
-                        className="w-full rounded-lg border border-zinc-700 bg-zinc-950 p-2.5 text-zinc-200"
+                        className="w-full rounded-md border border-gray-300 p-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
                       />
                     </div>
-                    <Button type="submit" size="sm" className="w-full mt-2" isLoading={isRecordingMeeting}>
-                      Save Meeting Log & Sync
+                    <Button type="submit" size="sm" className="w-full mt-1" isLoading={isRecordingMeeting}>
+                      Save Meeting Log
                     </Button>
                   </form>
                 </CardContent>
               </Card>
             ) : (
-              <Card className="border-indigo-900/40 bg-indigo-950/20">
-                <CardHeader>
-                  <CardTitle className="text-base text-indigo-300">Continuous Supervision</CardTitle>
+              <Card className="shadow-none border-gray-200">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm">Continuous Supervision</CardTitle>
                 </CardHeader>
-                <CardContent className="text-xs text-zinc-400 leading-relaxed">
-                  Your supervisor Dr. Robert Martinez conducts regular audits. All assigned action items
-                  recorded during check-ins appear automatically here.
+                <CardContent className="text-xs text-gray-500 leading-relaxed">
+                  Your supervisor logs regular check-ins. All assigned action items appear here automatically.
                 </CardContent>
               </Card>
             )}
@@ -767,34 +726,30 @@ export function ProjectWorkspaceInteractive({ project: initialProject, currentUs
         </div>
       )}
 
-      {/* ============================================================ */}
-      {/* TAB 4: MULTI-EXAMINER RUBRICS (Step 8)                        */}
-      {/* ============================================================ */}
+      {/* TAB 4: EVALUATIONS */}
       {activeTab === 'EVALUATIONS' && (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 space-y-6">
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between">
+            <Card className="shadow-none border-gray-200">
+              <CardHeader className="flex flex-row items-center justify-between pb-3">
                 <div>
-                  <CardTitle>Independent Multi-Examiner Assessment</CardTitle>
-                  <CardDescription>
-                    Final grade unlocked when all 3 independent faculty evaluations are submitted
-                  </CardDescription>
+                  <CardTitle>Independent Evaluations</CardTitle>
+                  <CardDescription>Submitted marks from faculty evaluators</CardDescription>
                 </div>
                 <div className="text-right">
-                  <span className="text-2xl font-black text-emerald-400">{avgTotalScore}</span>
-                  <span className="text-xs text-zinc-400"> / 100</span>
+                  <span className="text-2xl font-bold text-gray-900">{avgTotalScore}</span>
+                  <span className="text-xs text-gray-400"> / 100</span>
                 </div>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-3">
                 {project.evaluations?.map((ev, idx) => (
-                  <div key={ev.id} className="p-4 rounded-xl bg-zinc-950/60 border border-zinc-800 space-y-3">
+                  <div key={ev.id} className="p-3.5 rounded-lg border border-gray-200 bg-white space-y-2.5">
                     <div className="flex items-center justify-between">
                       <div>
-                        <h4 className="font-semibold text-white text-sm">
+                        <h4 className="font-semibold text-gray-900 text-sm">
                           Examiner {idx + 1}: {ev.examinerName}
                         </h4>
-                        <p className="text-[11px] text-zinc-400">{ev.examinerDepartment}</p>
+                        <p className="text-[11px] text-gray-500">{ev.examinerDepartment}</p>
                       </div>
                       <Badge variant={ev.isSubmitted ? 'success' : 'warning'}>
                         {ev.isSubmitted ? `${ev.totalScore} / 100` : 'Pending'}
@@ -804,33 +759,33 @@ export function ProjectWorkspaceInteractive({ project: initialProject, currentUs
                     {ev.isSubmitted && (
                       <>
                         <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 text-center text-xs">
-                          <div className="p-2 rounded bg-zinc-900">
-                            <p className="text-[10px] text-zinc-400">Tech (25)</p>
-                            <p className="font-bold text-white">{ev.technicalImplementationScore}</p>
+                          <div className="p-1.5 rounded bg-gray-50 border border-gray-100">
+                            <p className="text-[10px] text-gray-500">Tech (25)</p>
+                            <p className="font-bold text-gray-900">{ev.technicalImplementationScore}</p>
                           </div>
-                          <div className="p-2 rounded bg-zinc-900">
-                            <p className="text-[10px] text-zinc-400">Problem (15)</p>
-                            <p className="font-bold text-white">{ev.problemUnderstandingScore}</p>
+                          <div className="p-1.5 rounded bg-gray-50 border border-gray-100">
+                            <p className="text-[10px] text-gray-500">Problem (15)</p>
+                            <p className="font-bold text-gray-900">{ev.problemUnderstandingScore}</p>
                           </div>
-                          <div className="p-2 rounded bg-zinc-900">
-                            <p className="text-[10px] text-zinc-400">Innov (15)</p>
-                            <p className="font-bold text-white">{ev.innovationScore}</p>
+                          <div className="p-1.5 rounded bg-gray-50 border border-gray-100">
+                            <p className="text-[10px] text-gray-500">Innov (15)</p>
+                            <p className="font-bold text-gray-900">{ev.innovationScore}</p>
                           </div>
-                          <div className="p-2 rounded bg-zinc-900">
-                            <p className="text-[10px] text-zinc-400">Doc (15)</p>
-                            <p className="font-bold text-white">{ev.documentationScore}</p>
+                          <div className="p-1.5 rounded bg-gray-50 border border-gray-100">
+                            <p className="text-[10px] text-gray-500">Doc (15)</p>
+                            <p className="font-bold text-gray-900">{ev.documentationScore}</p>
                           </div>
-                          <div className="p-2 rounded bg-zinc-900">
-                            <p className="text-[10px] text-zinc-400">Pres (15)</p>
-                            <p className="font-bold text-white">{ev.presentationScore}</p>
+                          <div className="p-1.5 rounded bg-gray-50 border border-gray-100">
+                            <p className="text-[10px] text-gray-500">Pres (15)</p>
+                            <p className="font-bold text-gray-900">{ev.presentationScore}</p>
                           </div>
-                          <div className="p-2 rounded bg-zinc-900">
-                            <p className="text-[10px] text-zinc-400">Outcome (15)</p>
-                            <p className="font-bold text-white">{ev.projectOutcomeScore}</p>
+                          <div className="p-1.5 rounded bg-gray-50 border border-gray-100">
+                            <p className="text-[10px] text-gray-500">Outcome (15)</p>
+                            <p className="font-bold text-gray-900">{ev.projectOutcomeScore}</p>
                           </div>
                         </div>
 
-                        <div className="text-xs text-zinc-300 bg-zinc-900/40 p-2.5 rounded-lg border border-zinc-800">
+                        <div className="text-xs text-gray-700 bg-gray-50 p-2.5 rounded border border-gray-200">
                           <strong>Viva Remarks:</strong> {ev.comments}
                         </div>
                       </>
@@ -841,25 +796,24 @@ export function ProjectWorkspaceInteractive({ project: initialProject, currentUs
             </Card>
           </div>
 
-          {/* Recharts Radar Visualizer */}
           <div className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-sm">Rubric Assessment Radar</CardTitle>
-                <CardDescription className="text-xs">Aggregated across all 3 independent examiners</CardDescription>
+            <Card className="shadow-none border-gray-200">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-semibold">Rubric Assessment Radar</CardTitle>
+                <CardDescription className="text-xs">Composite score distribution</CardDescription>
               </CardHeader>
-              <CardContent className="h-[270px] w-full pt-0 flex items-center justify-center">
+              <CardContent className="h-[250px] w-full pt-0 flex items-center justify-center">
                 <ResponsiveContainer width="100%" height="100%">
                   <RadarChart data={avgCriteria}>
-                    <PolarGrid stroke="#3f3f46" />
-                    <PolarAngleAxis dataKey="subject" stroke="#a1a1aa" tick={{ fontSize: 9 }} />
-                    <PolarRadiusAxis stroke="#52525b" tick={{ fontSize: 8 }} />
+                    <PolarGrid stroke="#e5e7eb" />
+                    <PolarAngleAxis dataKey="subject" stroke="#6b7280" tick={{ fontSize: 9 }} />
+                    <PolarRadiusAxis stroke="#e5e7eb" tick={{ fontSize: 8 }} />
                     <Radar
                       name="Score"
                       dataKey="score"
-                      stroke="#818cf8"
-                      fill="#818cf8"
-                      fillOpacity={0.45}
+                      stroke="#4f46e5"
+                      fill="#4f46e5"
+                      fillOpacity={0.15}
                     />
                   </RadarChart>
                 </ResponsiveContainer>
@@ -869,67 +823,56 @@ export function ProjectWorkspaceInteractive({ project: initialProject, currentUs
         </div>
       )}
 
-      {/* ============================================================ */}
-      {/* TAB 5: ORIGINALITY & IP GOVERNANCE (Step 9)                   */}
-      {/* ============================================================ */}
+      {/* TAB 5: ORIGINALITY & IP */}
       {activeTab === 'ORIGINALITY_IP' && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          <Card>
-            <CardHeader>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <Card className="shadow-none border-gray-200">
+            <CardHeader className="pb-3">
               <CardTitle className="flex items-center gap-2">
-                <FileText className="w-5 h-5 text-emerald-400" />
-                Originality & Similarity Verification
+                <FileText className="w-4 h-4 text-emerald-600" />
+                Originality & Verification
               </CardTitle>
-              <CardDescription>Academic integrity compliance record</CardDescription>
+              <CardDescription>Academic integrity compliance report</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4 text-xs">
-              <div className="p-4 rounded-xl bg-zinc-950/60 border border-zinc-800 space-y-3">
+            <CardContent className="space-y-3 text-xs">
+              <div className="p-3.5 rounded-lg border border-gray-200 bg-gray-50 space-y-2">
                 <div className="flex justify-between items-center">
-                  <span className="text-zinc-400">Document Evaluated:</span>
-                  <span className="font-semibold text-white">Final Project Report & Source Code</span>
+                  <span className="text-gray-500">Document:</span>
+                  <span className="font-semibold text-gray-900">Project Report & Source Code</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-zinc-400">Similarity Index:</span>
-                  <Badge variant="success">12.0% (Checked 18 December)</Badge>
+                  <span className="text-gray-500">Similarity Index:</span>
+                  <Badge variant="success">12.0% Verified</Badge>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-zinc-400">Verification Status:</span>
-                  <span className="font-semibold text-emerald-400">Recorded & Approved by Committee</span>
-                </div>
-                <div className="pt-2">
-                  <Button variant="outline" size="sm" className="w-full">
-                    <ExternalLink className="w-3.5 h-3.5 mr-1.5" /> View Official Originality Report
-                  </Button>
+                  <span className="text-gray-500">Status:</span>
+                  <span className="font-medium text-emerald-600">Approved by Committee</span>
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="border-amber-900/40 bg-amber-950/10">
-            <CardHeader>
-              <CardTitle className="text-amber-300 flex items-center gap-2">
-                <Lock className="w-5 h-5" />
-                Intellectual Property & Sponsor Governance
+          <Card className="shadow-none border-gray-200">
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2">
+                <Lock className="w-4 h-4 text-amber-600" />
+                IP Governance
               </CardTitle>
-              <CardDescription>Steerpath corporate agreements and publication rights</CardDescription>
+              <CardDescription>Corporate agreements and rights</CardDescription>
             </CardHeader>
             <CardContent className="space-y-3 text-xs">
-              <div className="p-4 rounded-xl bg-zinc-950/60 border border-zinc-800 space-y-2">
-                <div className="flex justify-between py-1 border-b border-zinc-800">
-                  <span className="text-zinc-400">Ownership:</span>
-                  <span className="font-medium text-white">Joint Academic / Steerpath Sponsor Owned</span>
+              <div className="p-3.5 rounded-lg border border-gray-200 bg-gray-50 space-y-2">
+                <div className="flex justify-between py-1 border-b border-gray-200">
+                  <span className="text-gray-500">Ownership:</span>
+                  <span className="font-medium text-gray-900">Joint Academic / Steerpath Sponsor</span>
                 </div>
-                <div className="flex justify-between py-1 border-b border-zinc-800">
-                  <span className="text-zinc-400">Confidentiality:</span>
+                <div className="flex justify-between py-1 border-b border-gray-200">
+                  <span className="text-gray-500">Confidentiality:</span>
                   <Badge variant="warning">CONFIDENTIAL (NDA Active)</Badge>
                 </div>
-                <div className="flex justify-between py-1 border-b border-zinc-800">
-                  <span className="text-zinc-400">Public Publication Permission:</span>
-                  <span className="font-medium text-emerald-400">Granted with proprietary coordinates redacted</span>
-                </div>
                 <div className="flex justify-between py-1">
-                  <span className="text-zinc-400">Agreement Documents:</span>
-                  <span className="font-medium text-white">Steerpath_NDA_Signed_2026.pdf</span>
+                  <span className="text-gray-500">Agreement:</span>
+                  <span className="font-medium text-gray-900">Steerpath_NDA_Signed_2026.pdf</span>
                 </div>
               </div>
             </CardContent>
