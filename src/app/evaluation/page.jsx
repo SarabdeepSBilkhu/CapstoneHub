@@ -1,13 +1,13 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/context/toast-context';
-import { Scale, Lock, CheckCircle2, Eye } from 'lucide-react';
+import { Scale, Lock, CheckCircle2, Eye, AlertCircle, Save, Clock } from 'lucide-react';
 import {
   RadarChart,
   PolarGrid,
@@ -33,9 +33,9 @@ const EXAMINER_DEFAULTS = [
 ];
 
 const EXAMINERS = [
-  { name: 'Prof. Sarah Jenkins', dept: 'Information Technology', title: 'Lead Technical Evaluator', email: 'examiner@capstonehub.edu' },
-  { name: 'Dr. Vivek Sharma', dept: 'Computer Science & Engineering', title: 'External Assessment Chair', email: 'examiner2@capstonehub.edu' },
-  { name: 'Prof. Claire Dubois', dept: 'Software Engineering', title: 'Industry Liaison Member', email: 'examiner3@capstonehub.edu' },
+  { id: 'usr_examiner_1', name: 'Prof. Sarah Jenkins', dept: 'Information Technology', title: 'Lead Technical Evaluator', email: 'examiner@capstonehub.edu' },
+  { id: 'usr_examiner_2', name: 'Dr. Vivek Sharma', dept: 'Computer Science & Engineering', title: 'External Assessment Chair', email: 'examiner2@capstonehub.edu' },
+  { id: 'usr_examiner_3', name: 'Prof. Claire Dubois', dept: 'Software Engineering', title: 'Industry Liaison Member', email: 'examiner3@capstonehub.edu' },
 ];
 
 export default function EvaluationPage() {
@@ -48,13 +48,14 @@ export default function EvaluationPage() {
   const [projects, setProjects] = useState([]);
   const [selectedProjectId, setSelectedProjectId] = useState(initialProjectId || '');
   const [evaluationsMap, setEvaluationsMap] = useState({});
+  const [isLoadingEvals, setIsLoadingEvals] = useState(false);
 
   const [myExaminerIndex, setMyExaminerIndex] = useState(null);
   const [viewingIndex, setViewingIndex] = useState(0);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
 
+  // Form values
   const [techScore, setTechScore] = useState(EXAMINER_DEFAULTS[0].tech);
   const [problemScore, setProblemScore] = useState(EXAMINER_DEFAULTS[0].problem);
   const [innovScore, setInnovScore] = useState(EXAMINER_DEFAULTS[0].innov);
@@ -63,6 +64,11 @@ export default function EvaluationPage() {
   const [outcomeScore, setOutcomeScore] = useState(EXAMINER_DEFAULTS[0].outcome);
   const [comments, setComments] = useState(EXAMINER_DEFAULTS[0].comments);
 
+  // Saved database snapshot for change detection
+  const [savedSnapshot, setSavedSnapshot] = useState(null);
+  const [lastSubmittedAt, setLastSubmittedAt] = useState(null);
+  const [isPersistedInDb, setIsPersistedInDb] = useState(false);
+
   // 1. Fetch current user session
   useEffect(() => {
     fetch('/api/auth/session')
@@ -70,13 +76,17 @@ export default function EvaluationPage() {
       .then(({ user }) => {
         setCurrentUser(user);
         if (user?.role === 'EXAMINER') {
-          const idx = EXAMINERS.findIndex((ex) => ex.email === user.email);
+          const idx = EXAMINERS.findIndex(
+            (ex) =>
+              ex.email.toLowerCase() === user.email?.toLowerCase() ||
+              ex.name.toLowerCase() === user.name?.toLowerCase() ||
+              ex.id === user.id
+          );
           const resolvedIdx = idx >= 0 ? idx : 0;
           setMyExaminerIndex(resolvedIdx);
           setViewingIndex(resolvedIdx);
         } else if (user?.role === 'ADMIN') {
           setMyExaminerIndex(null);
-          setViewingIndex(0);
         }
       })
       .catch(() => {})
@@ -100,74 +110,141 @@ export default function EvaluationPage() {
   }, []);
 
   // 3. Fetch evaluations whenever selectedProjectId changes
-  useEffect(() => {
-    if (!selectedProjectId) return;
-    fetch(`/api/evaluations?projectId=${selectedProjectId}`)
+  const fetchEvaluations = (projId) => {
+    if (!projId) return;
+    setIsLoadingEvals(true);
+    fetch(`/api/evaluations?projectId=${projId}`)
       .then((r) => r.json())
       .then((data) => {
         if (data.evaluations) {
           const map = {};
           data.evaluations.forEach((ev) => {
-            const examinerIdx = EXAMINERS.findIndex((ex) => ex.name === ev.examiner?.name || ex.id === ev.examinerId);
+            const examinerIdx = EXAMINERS.findIndex(
+              (ex) =>
+                ex.id === ev.examinerId ||
+                ex.email.toLowerCase() === ev.examiner?.email?.toLowerCase() ||
+                ex.name.toLowerCase() === ev.examiner?.name?.toLowerCase()
+            );
             if (examinerIdx >= 0) {
               map[examinerIdx] = ev;
             }
           });
           setEvaluationsMap(map);
-          loadScoresForIndex(viewingIndex, map);
         }
       })
-      .catch(() => {
-        loadScoresForIndex(viewingIndex, {});
+      .catch((err) => {
+        console.error('Failed to load evaluations:', err);
+      })
+      .finally(() => {
+        setIsLoadingEvals(false);
       });
+  };
+
+  useEffect(() => {
+    if (selectedProjectId) {
+      fetchEvaluations(selectedProjectId);
+    }
   }, [selectedProjectId]);
 
-  const loadScoresForIndex = (idx, currentMap = evaluationsMap) => {
-    const existing = currentMap[idx];
+  // 4. Synchronize form inputs whenever viewingIndex or evaluationsMap changes
+  useEffect(() => {
+    const existing = evaluationsMap[viewingIndex];
     if (existing) {
-      setTechScore(existing.technicalImplementationScore ?? EXAMINER_DEFAULTS[idx].tech);
-      setProblemScore(existing.problemUnderstandingScore ?? EXAMINER_DEFAULTS[idx].problem);
-      setInnovScore(existing.innovationScore ?? EXAMINER_DEFAULTS[idx].innov);
-      setDocScore(existing.documentationScore ?? EXAMINER_DEFAULTS[idx].doc);
-      setPresScore(existing.presentationScore ?? EXAMINER_DEFAULTS[idx].pres);
-      setOutcomeScore(existing.projectOutcomeScore ?? EXAMINER_DEFAULTS[idx].outcome);
-      setComments(existing.comments || EXAMINER_DEFAULTS[idx].comments);
-      setSubmitted(Boolean(existing.isSubmitted));
+      const t = existing.technicalImplementationScore ?? EXAMINER_DEFAULTS[viewingIndex]?.tech ?? 0;
+      const p = existing.problemUnderstandingScore ?? EXAMINER_DEFAULTS[viewingIndex]?.problem ?? 0;
+      const i = existing.innovationScore ?? EXAMINER_DEFAULTS[viewingIndex]?.innov ?? 0;
+      const d = existing.documentationScore ?? EXAMINER_DEFAULTS[viewingIndex]?.doc ?? 0;
+      const pr = existing.presentationScore ?? EXAMINER_DEFAULTS[viewingIndex]?.pres ?? 0;
+      const o = existing.projectOutcomeScore ?? EXAMINER_DEFAULTS[viewingIndex]?.outcome ?? 0;
+      const c = existing.comments || EXAMINER_DEFAULTS[viewingIndex]?.comments || '';
+
+      setTechScore(t);
+      setProblemScore(p);
+      setInnovScore(i);
+      setDocScore(d);
+      setPresScore(pr);
+      setOutcomeScore(o);
+      setComments(c);
+      setLastSubmittedAt(existing.submittedAt || existing.updatedAt || null);
+      setIsPersistedInDb(Boolean(existing.isSubmitted));
+      setSavedSnapshot({ tech: t, problem: p, innov: i, doc: d, pres: pr, outcome: o, comments: c });
     } else {
-      const d = EXAMINER_DEFAULTS[idx] || EXAMINER_DEFAULTS[0];
-      setTechScore(d.tech);
-      setProblemScore(d.problem);
-      setInnovScore(d.innov);
-      setDocScore(d.doc);
-      setPresScore(d.pres);
-      setOutcomeScore(d.outcome);
-      setComments(d.comments);
-      setSubmitted(false);
+      const def = EXAMINER_DEFAULTS[viewingIndex] || EXAMINER_DEFAULTS[0];
+      setTechScore(def.tech);
+      setProblemScore(def.problem);
+      setInnovScore(def.innov);
+      setDocScore(def.doc);
+      setPresScore(def.pres);
+      setOutcomeScore(def.outcome);
+      setComments(def.comments);
+      setLastSubmittedAt(null);
+      setIsPersistedInDb(false);
+      setSavedSnapshot(null);
     }
-  };
+  }, [viewingIndex, evaluationsMap]);
 
-  const handleSelectExaminerTab = (idx) => {
-    setViewingIndex(idx);
-    loadScoresForIndex(idx);
-  };
+  // Check if form has unsaved modifications
+  const hasUnsavedChanges = useMemo(() => {
+    if (!savedSnapshot) return true; // not saved in DB yet
+    return (
+      Number(techScore) !== Number(savedSnapshot.tech) ||
+      Number(problemScore) !== Number(savedSnapshot.problem) ||
+      Number(innovScore) !== Number(savedSnapshot.innov) ||
+      Number(docScore) !== Number(savedSnapshot.doc) ||
+      Number(presScore) !== Number(savedSnapshot.pres) ||
+      Number(outcomeScore) !== Number(savedSnapshot.outcome) ||
+      comments.trim() !== savedSnapshot.comments.trim()
+    );
+  }, [techScore, problemScore, innovScore, docScore, presScore, outcomeScore, comments, savedSnapshot]);
 
+  // Safe numerical calculations
+  const safeTech = Number(techScore) || 0;
+  const safeProblem = Number(problemScore) || 0;
+  const safeInnov = Number(innovScore) || 0;
+  const safeDoc = Number(docScore) || 0;
+  const safePres = Number(presScore) || 0;
+  const safeOutcome = Number(outcomeScore) || 0;
   const totalScore = Number(
-    (techScore + problemScore + innovScore + docScore + presScore + outcomeScore).toFixed(1)
+    (safeTech + safeProblem + safeInnov + safeDoc + safePres + safeOutcome).toFixed(1)
   );
 
   const radarData = [
-    { subject: 'Technical (25)', score: techScore, fullMark: 25 },
-    { subject: 'Problem (15)', score: problemScore, fullMark: 15 },
-    { subject: 'Innovation (15)', score: innovScore, fullMark: 15 },
-    { subject: 'Documentation (15)', score: docScore, fullMark: 15 },
-    { subject: 'Presentation (15)', score: presScore, fullMark: 15 },
-    { subject: 'Outcome (15)', score: outcomeScore, fullMark: 15 },
+    { subject: 'Technical (25)', score: safeTech, fullMark: 25 },
+    { subject: 'Problem (15)', score: safeProblem, fullMark: 15 },
+    { subject: 'Innovation (15)', score: safeInnov, fullMark: 15 },
+    { subject: 'Documentation (15)', score: safeDoc, fullMark: 15 },
+    { subject: 'Presentation (15)', score: safePres, fullMark: 15 },
+    { subject: 'Outcome (15)', score: safeOutcome, fullMark: 15 },
   ];
+
+  // Permissions & Role Access
+  const isAdmin = currentUser?.role === 'ADMIN';
+  const isExaminer = currentUser?.role === 'EXAMINER';
+  const isMyTab = isExaminer && myExaminerIndex === viewingIndex;
+  const canEdit = isAdmin || isMyTab;
+  const isReadOnly = !canEdit;
+
+  const activeExaminer = EXAMINERS[viewingIndex];
+  const activeProject = projects.find((p) => p.id === selectedProjectId);
+
+  const handleScoreChange = (setter, max) => (e) => {
+    if (isReadOnly) return;
+    const val = e.target.value;
+    if (val === '') {
+      setter('');
+      return;
+    }
+    const num = parseFloat(val);
+    if (isNaN(num)) return;
+    if (num < 0) setter(0);
+    else if (num > max) setter(max);
+    else setter(num);
+  };
 
   const handleSubmitEvaluation = async (e) => {
     e.preventDefault();
-    if (myExaminerIndex === null || myExaminerIndex !== viewingIndex) {
-      toast('You can only submit scores for your own examiner identity.', 'error');
+    if (!canEdit) {
+      toast('You do not have permission to submit scores for this examiner.', 'error');
       return;
     }
     if (!selectedProjectId) {
@@ -179,12 +256,14 @@ export default function EvaluationPage() {
     try {
       const payload = {
         projectId: selectedProjectId,
-        technicalImplementationScore: techScore,
-        problemUnderstandingScore: problemScore,
-        innovationScore: innovScore,
-        documentationScore: docScore,
-        presentationScore: presScore,
-        projectOutcomeScore: outcomeScore,
+        examinerEmail: activeExaminer.email,
+        examinerId: activeExaminer.id,
+        technicalImplementationScore: safeTech,
+        problemUnderstandingScore: safeProblem,
+        innovationScore: safeInnov,
+        documentationScore: safeDoc,
+        presentationScore: safePres,
+        projectOutcomeScore: safeOutcome,
         comments,
       };
 
@@ -197,15 +276,25 @@ export default function EvaluationPage() {
       const resData = await res.json();
       if (!res.ok) throw new Error(resData.error || 'Failed to submit evaluation');
 
-      toast(resData.message || 'Evaluation recorded successfully!', 'success');
-      setSubmitted(true);
+      toast(resData.message || 'Evaluation score recorded in PostgreSQL!', 'success');
 
-      // Update map
+      // Update local state snapshot immediately
       if (resData.evaluation) {
         setEvaluationsMap((prev) => ({
           ...prev,
           [viewingIndex]: resData.evaluation,
         }));
+        setIsPersistedInDb(true);
+        setLastSubmittedAt(new Date().toISOString());
+        setSavedSnapshot({
+          tech: safeTech,
+          problem: safeProblem,
+          innov: safeInnov,
+          doc: safeDoc,
+          pres: safePres,
+          outcome: safeOutcome,
+          comments,
+        });
       }
     } catch (err) {
       toast(err.message, 'error');
@@ -213,12 +302,6 @@ export default function EvaluationPage() {
       setIsSubmitting(false);
     }
   };
-
-  const isAdminView = currentUser?.role === 'ADMIN';
-  // Read-only if user is admin, or if examiner is viewing another examiner's tab
-  const isReadOnly = isAdminView || (myExaminerIndex !== null && myExaminerIndex !== viewingIndex);
-  const activeExaminer = EXAMINERS[viewingIndex];
-  const activeProject = projects.find((p) => p.id === selectedProjectId);
 
   if (isLoadingUser) {
     return (
@@ -236,9 +319,14 @@ export default function EvaluationPage() {
           <div className="flex items-center gap-2 flex-wrap">
             <h1 className="text-2xl font-bold tracking-tight text-gray-900">Multi-Examiner Evaluation</h1>
             <Badge variant="purple">3 Evaluators</Badge>
-            {isReadOnly && (
+            {isAdmin && (
               <Badge variant="warning" className="flex items-center gap-1">
-                <Eye className="w-3 h-3" /> {isAdminView ? 'Admin Read-Only' : 'Viewing Another Examiner (Read-Only)'}
+                Admin Evaluation & Override
+              </Badge>
+            )}
+            {!isAdmin && isReadOnly && (
+              <Badge variant="outline" className="flex items-center gap-1 text-gray-600">
+                <Eye className="w-3 h-3" /> Read-Only View
               </Badge>
             )}
           </div>
@@ -259,27 +347,30 @@ export default function EvaluationPage() {
             ) : (
               <strong className="text-gray-900">{activeProject?.title || 'Loading project...'}</strong>
             )}
+            {isLoadingEvals && <span className="text-xs text-gray-400 italic">Syncing live scores…</span>}
           </div>
         </div>
 
         {/* Examiner Tabs */}
         <div className="flex items-center gap-1 bg-gray-100 p-1 rounded-md border border-gray-200">
           {EXAMINERS.map((ex, idx) => {
-            const isMyIdentity = myExaminerIndex === idx;
+            const isMyIdentity = isExaminer && myExaminerIndex === idx;
+            const hasEntry = evaluationsMap[idx]?.isSubmitted;
             return (
               <button
-                key={ex.name}
+                key={ex.id}
                 type="button"
-                onClick={() => handleSelectExaminerTab(idx)}
-                className={`px-3 py-1.5 rounded text-xs font-medium transition-colors cursor-pointer ${
+                onClick={() => setViewingIndex(idx)}
+                className={`px-3 py-1.5 rounded text-xs font-medium transition-colors cursor-pointer flex items-center gap-1.5 ${
                   viewingIndex === idx
                     ? 'bg-white text-gray-900 shadow-sm font-semibold'
                     : 'text-gray-600 hover:text-gray-900'
                 }`}
               >
-                {!isAdminView && !isMyIdentity && <Lock className="w-3 h-3 inline mr-1 text-gray-400" />}
-                Examiner {idx + 1}
-                {isMyIdentity && <span className="ml-1 text-[10px] text-indigo-600 font-bold">(You)</span>}
+                {!isAdmin && !isMyIdentity && <Lock className="w-3 h-3 text-gray-400" />}
+                {hasEntry && <CheckCircle2 className="w-3 h-3 text-emerald-500" />}
+                <span>Examiner {idx + 1}</span>
+                {isMyIdentity && <span className="text-[10px] text-indigo-600 font-bold">(You)</span>}
               </button>
             );
           })}
@@ -290,21 +381,40 @@ export default function EvaluationPage() {
         {/* Rubric Evaluation Form */}
         <div className="lg:col-span-2 space-y-6">
           <Card className="shadow-none border-gray-200">
-            <CardHeader className="pb-3">
-              <CardTitle className="flex items-center gap-2">
-                <Scale className="w-4 h-4 text-indigo-600" />
-                {isReadOnly ? 'Viewing' : 'Marksheet'}: {activeExaminer.name}
-              </CardTitle>
-              <CardDescription>
-                {activeExaminer.title} • {activeExaminer.dept}
-                {isReadOnly && (
-                  <span className="ml-2 text-amber-600 font-medium">
-                    — {isAdminView ? 'Read-only view' : 'Only this examiner can submit their score'}
-                  </span>
-                )}
-              </CardDescription>
+            <CardHeader className="pb-3 border-b border-gray-100">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <CardTitle className="flex items-center gap-2">
+                    <Scale className="w-4 h-4 text-indigo-600" />
+                    Marksheet: {activeExaminer.name}
+                  </CardTitle>
+                  <CardDescription className="mt-1">
+                    {activeExaminer.title} • {activeExaminer.dept}
+                  </CardDescription>
+                </div>
+
+                {/* Status indicator */}
+                <div className="text-right flex flex-col items-end">
+                  {isPersistedInDb ? (
+                    <span className="inline-flex items-center gap-1 text-xs font-medium text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                      <CheckCircle2 className="w-3.5 h-3.5" />
+                      Saved in Database
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1 text-xs font-medium text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
+                      <Clock className="w-3.5 h-3.5" />
+                      Pending Evaluation
+                    </span>
+                  )}
+                  {lastSubmittedAt && (
+                    <span className="text-[10px] text-gray-400 mt-0.5">
+                      Updated: {new Date(lastSubmittedAt).toLocaleDateString()}
+                    </span>
+                  )}
+                </div>
+              </div>
             </CardHeader>
-            <CardContent>
+            <CardContent className="pt-4">
               <form onSubmit={handleSubmitEvaluation} className="space-y-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                   <Input
@@ -315,7 +425,7 @@ export default function EvaluationPage() {
                     min={0}
                     value={techScore}
                     readOnly={isReadOnly}
-                    onChange={(e) => !isReadOnly && setTechScore(Number(e.target.value))}
+                    onChange={handleScoreChange(setTechScore, 25)}
                     className={isReadOnly ? 'bg-gray-50 text-gray-500 cursor-not-allowed' : ''}
                   />
                   <Input
@@ -326,7 +436,7 @@ export default function EvaluationPage() {
                     min={0}
                     value={problemScore}
                     readOnly={isReadOnly}
-                    onChange={(e) => !isReadOnly && setProblemScore(Number(e.target.value))}
+                    onChange={handleScoreChange(setProblemScore, 15)}
                     className={isReadOnly ? 'bg-gray-50 text-gray-500 cursor-not-allowed' : ''}
                   />
                   <Input
@@ -337,7 +447,7 @@ export default function EvaluationPage() {
                     min={0}
                     value={innovScore}
                     readOnly={isReadOnly}
-                    onChange={(e) => !isReadOnly && setInnovScore(Number(e.target.value))}
+                    onChange={handleScoreChange(setInnovScore, 15)}
                     className={isReadOnly ? 'bg-gray-50 text-gray-500 cursor-not-allowed' : ''}
                   />
                   <Input
@@ -348,7 +458,7 @@ export default function EvaluationPage() {
                     min={0}
                     value={docScore}
                     readOnly={isReadOnly}
-                    onChange={(e) => !isReadOnly && setDocScore(Number(e.target.value))}
+                    onChange={handleScoreChange(setDocScore, 15)}
                     className={isReadOnly ? 'bg-gray-50 text-gray-500 cursor-not-allowed' : ''}
                   />
                   <Input
@@ -359,7 +469,7 @@ export default function EvaluationPage() {
                     min={0}
                     value={presScore}
                     readOnly={isReadOnly}
-                    onChange={(e) => !isReadOnly && setPresScore(Number(e.target.value))}
+                    onChange={handleScoreChange(setPresScore, 15)}
                     className={isReadOnly ? 'bg-gray-50 text-gray-500 cursor-not-allowed' : ''}
                   />
                   <Input
@@ -370,7 +480,7 @@ export default function EvaluationPage() {
                     min={0}
                     value={outcomeScore}
                     readOnly={isReadOnly}
-                    onChange={(e) => !isReadOnly && setOutcomeScore(Number(e.target.value))}
+                    onChange={handleScoreChange(setOutcomeScore, 15)}
                     className={isReadOnly ? 'bg-gray-50 text-gray-500 cursor-not-allowed' : ''}
                   />
                 </div>
@@ -384,29 +494,41 @@ export default function EvaluationPage() {
                     value={comments}
                     readOnly={isReadOnly}
                     onChange={(e) => !isReadOnly && setComments(e.target.value)}
-                    className={`w-full rounded-md border border-gray-300 p-2.5 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 ${isReadOnly ? 'bg-gray-50 text-gray-500 cursor-not-allowed' : ''}`}
+                    placeholder="Enter examiner notes, strengths, and areas of improvement..."
+                    className={`w-full rounded-md border border-gray-300 p-2.5 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 ${
+                      isReadOnly ? 'bg-gray-50 text-gray-500 cursor-not-allowed' : ''
+                    }`}
                   />
                 </div>
 
-                {!isReadOnly && (
-                  submitted ? (
-                    <div className="flex items-center gap-2 justify-center w-full py-2.5 rounded-md bg-emerald-50 border border-emerald-200 text-emerald-700 text-sm font-medium">
-                      <CheckCircle2 className="w-4 h-4" />
-                      Score submitted successfully as {activeExaminer.name}
-                    </div>
-                  ) : (
-                    <Button type="submit" className="w-full" isLoading={isSubmitting}>
-                      Submit Score as {activeExaminer.name}
-                    </Button>
-                  )
+                {/* Unsaved changes alert */}
+                {canEdit && hasUnsavedChanges && (
+                  <div className="flex items-center gap-2 p-2.5 rounded-md bg-amber-50 border border-amber-200 text-amber-800 text-xs font-medium">
+                    <AlertCircle className="w-4 h-4 text-amber-600 flex-shrink-0" />
+                    <span>You have unsaved changes. Click below to save your updated scores to PostgreSQL.</span>
+                  </div>
                 )}
 
-                {isReadOnly && (
-                  <div className="flex items-center gap-1.5 justify-center w-full py-2 rounded-md bg-gray-50 border border-gray-200 text-gray-500 text-xs">
+                {/* Action Button */}
+                {canEdit ? (
+                  <Button
+                    type="submit"
+                    className="w-full flex items-center justify-center gap-2"
+                    isLoading={isSubmitting}
+                  >
+                    <Save className="w-4 h-4" />
+                    {isPersistedInDb
+                      ? hasUnsavedChanges
+                        ? `Save & Update Score as ${activeExaminer.name}`
+                        : `Update Score as ${activeExaminer.name}`
+                      : `Submit Score as ${activeExaminer.name}`}
+                  </Button>
+                ) : (
+                  <div className="flex items-center gap-1.5 justify-center w-full py-2.5 rounded-md bg-gray-50 border border-gray-200 text-gray-500 text-xs">
                     <Lock className="w-3.5 h-3.5" />
-                    {isAdminView
-                      ? 'Admins can view but not edit examiner scores'
-                      : `Scores can only be submitted when logged in as ${activeExaminer.name}`}
+                    {isExaminer
+                      ? `This marksheet belongs to ${activeExaminer.name}. Switch to your tab to enter scores.`
+                      : 'Logged in under read-only permissions for this marksheet.'}
                   </div>
                 )}
               </form>
@@ -428,6 +550,11 @@ export default function EvaluationPage() {
               <Badge variant="success" className="mt-2 text-xs px-2.5 py-0.5">
                 {totalScore >= 85 ? 'Distinction (A+)' : totalScore >= 70 ? 'Merit (A)' : 'Pass'}
               </Badge>
+              {hasUnsavedChanges && canEdit && (
+                <span className="text-[11px] text-amber-600 font-medium mt-2">
+                  • Modified (Pending Save)
+                </span>
+              )}
             </CardContent>
           </Card>
 
@@ -440,7 +567,7 @@ export default function EvaluationPage() {
                 <RadarChart data={radarData}>
                   <PolarGrid stroke="#e5e7eb" />
                   <PolarAngleAxis dataKey="subject" stroke="#6b7280" tick={{ fontSize: 9 }} />
-                  <PolarRadiusAxis stroke="#e5e7eb" tick={{ fontSize: 8 }} />
+                  <PolarRadiusAxis stroke="#e5e7eb" tick={{ fontSize: 8 }} domain={[0, 25]} />
                   <Radar
                     name="Score"
                     dataKey="score"
