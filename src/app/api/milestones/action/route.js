@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getCurrentUser } from '@/lib/auth';
 
@@ -21,7 +21,11 @@ export async function POST(req) {
         return NextResponse.json({ error: 'Unauthorized: Supervisors only' }, { status: 403 });
       }
 
-      const { title, description, dueDate, weightage } = milestoneData;
+      const { title, description = '', dueDate, weightage } = milestoneData || {};
+
+      if (!title || !dueDate || weightage === undefined) {
+        return NextResponse.json({ error: 'Missing required milestone data' }, { status: 400 });
+      }
 
       const newMilestone = await prisma.milestone.create({
         data: {
@@ -43,7 +47,23 @@ export async function POST(req) {
         return NextResponse.json({ error: 'Unauthorized: Students only' }, { status: 403 });
       }
 
-      const { milestoneId, deliverableUrl } = submissionData;
+      const { milestoneId, deliverableUrl } = submissionData || {};
+
+      if (!milestoneId || !deliverableUrl) {
+        return NextResponse.json({ error: 'Missing milestoneId or deliverableUrl' }, { status: 400 });
+      }
+
+      try {
+        const parsed = new URL(deliverableUrl);
+        if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+          throw new Error('Invalid protocol');
+        }
+      } catch {
+        return NextResponse.json(
+          { error: 'Invalid deliverable URL. Must be a valid HTTP or HTTPS link.' },
+          { status: 400 }
+        );
+      }
 
       const updatedMilestone = await prisma.milestone.update({
         where: { id: milestoneId },
@@ -63,13 +83,17 @@ export async function POST(req) {
         return NextResponse.json({ error: 'Unauthorized: Supervisors only' }, { status: 403 });
       }
 
-      const { milestoneId, status, feedback } = reviewData; // status: "APPROVED" or "REVISION_REQUESTED"
+      const { milestoneId, status, feedback } = reviewData || {};
+
+      if (!milestoneId || !status) {
+        return NextResponse.json({ error: 'Missing review milestoneId or status' }, { status: 400 });
+      }
 
       const updatedMilestone = await prisma.milestone.update({
         where: { id: milestoneId },
         data: {
           status,
-          feedback,
+          feedback: feedback || '',
           reviewedAt: new Date(),
         },
       });
