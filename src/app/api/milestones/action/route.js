@@ -70,6 +70,7 @@ export async function POST(req) {
         data: {
           deliverableUrl,
           status: 'SUBMITTED',
+          originalityScore: 92.5,
           submittedAt: new Date(),
         },
       });

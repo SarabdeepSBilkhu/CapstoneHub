@@ -1,3 +1,4 @@
+// @vitest-environment happy-dom
 /**
  * Unit tests: UI Components
  * Tests Button, Badge, Card, and Input components.

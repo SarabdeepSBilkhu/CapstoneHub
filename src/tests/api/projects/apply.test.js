@@ -17,13 +17,15 @@ describe('POST /api/projects/apply', () => {
   it('submits a competitive proposal as STUDENT', async () => {
     getCurrentUser.mockResolvedValue({ id: 'usr_student_1', role: 'STUDENT', name: 'Alex Chen' });
     prisma.team.findFirst.mockResolvedValue({ id: 'team_001', name: 'GeoPath Innovators' });
-    prisma.projectApplication.create.mockResolvedValue({
+    const mockApp = {
       id: 'app_new_001',
       projectId: 'smart-campus-nav',
       teamId: 'team_001',
       proposal: 'Our team will implement BLE trilateration with sub-meter accuracy.',
       status: 'PENDING',
-    });
+    };
+    prisma.projectApplication.upsert.mockResolvedValue(mockApp);
+    prisma.projectApplication.create.mockResolvedValue(mockApp);
 
     const res = await POST(makeRequest({
       projectId: 'smart-campus-nav',
@@ -34,7 +36,7 @@ describe('POST /api/projects/apply', () => {
 
     expect(res.status).toBe(200);
     expect(body.application.status).toBe('PENDING');
-    expect(prisma.projectApplication.create).toHaveBeenCalledOnce();
+    expect(prisma.projectApplication.upsert).toHaveBeenCalledOnce();
   });
 
   it('returns 403 for SPONSOR role', async () => {

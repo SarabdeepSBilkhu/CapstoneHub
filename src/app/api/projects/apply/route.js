@@ -39,8 +39,19 @@ export async function POST(req) {
       });
     }
 
-    const application = await prisma.projectApplication.create({
-      data: {
+    const application = await prisma.projectApplication.upsert({
+      where: {
+        projectId_teamId: {
+          projectId,
+          teamId: team.id,
+        },
+      },
+      update: {
+        proposal,
+        status: 'PENDING',
+        submittedAt: new Date(),
+      },
+      create: {
         projectId,
         teamId: team.id,
         proposal,
