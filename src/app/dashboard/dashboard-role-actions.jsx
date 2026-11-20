@@ -64,6 +64,7 @@ export function DashboardRoleActions({ user, project: initialProject, allProject
 
   // Admin/Supervisor: Team allocation action
   const [isAllocatingTeam, setIsAllocatingTeam] = useState(false);
+  const [isRejectingApp, setIsRejectingApp] = useState(false);
 
   // Admin: Delete Project action
   const [deletingProjectId, setDeletingProjectId] = useState(null);
@@ -294,18 +295,55 @@ export function DashboardRoleActions({ user, project: initialProject, allProject
       if (!res.ok) throw new Error(data.error || 'Allocation failed');
 
       toast(data.message || 'Team successfully allocated!', 'success');
-      setProject((prev) => ({
-        ...prev,
-        status: 'ALLOCATED',
-        applications: prev.applications.map((a) => ({
-          ...a,
-          status: a.id === appId ? 'ACCEPTED' : 'REJECTED',
-        })),
-      }));
+      // Update project status AND all applications statuses in one go
+      const updateProject = (p) => {
+        if (p.id !== pId) return p;
+        return {
+          ...p,
+          status: 'ALLOCATED',
+          applications: p.applications.map((a) => ({
+            ...a,
+            status: a.id === appId ? 'ACCEPTED' : 'REJECTED',
+          })),
+        };
+      };
+      setProject((prev) => updateProject(prev));
+      setAllProjects((prev) => prev.map(updateProject));
     } catch (err) {
       toast(err.message, 'error');
     } finally {
       setIsAllocatingTeam(false);
+    }
+  };
+
+  // Admin: Reject a single application without allocating
+  const handleRejectApplication = async (pId, appId) => {
+    setIsRejectingApp(true);
+    try {
+      const res = await fetch('/api/projects/reject-application', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ applicationId: appId }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Rejection failed');
+
+      toast('Application rejected.', 'success');
+      const updateProject = (p) => {
+        if (p.id !== pId) return p;
+        return {
+          ...p,
+          applications: p.applications.map((a) =>
+            a.id === appId ? { ...a, status: 'REJECTED' } : a
+          ),
+        };
+      };
+      setProject((prev) => updateProject(prev));
+      setAllProjects((prev) => prev.map(updateProject));
+    } catch (err) {
+      toast(err.message, 'error');
+    } finally {
+      setIsRejectingApp(false);
     }
   };
 
@@ -390,15 +428,15 @@ export function DashboardRoleActions({ user, project: initialProject, allProject
         </div>
 
         {/* Dynamic Buttons */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3 flex-shrink-0">
           {role === 'SPONSOR' && (
-            <Button variant="primary" size="sm" onClick={() => setShowCreateModal(true)}>
+            <Button variant="primary" size="md" onClick={() => setShowCreateModal(true)}>
               <PlusCircle className="w-4 h-4 mr-1.5" /> Post Problem Statement
             </Button>
           )}
 
           <Link href={`/workspace/${project.id}`}>
-            <Button variant="outline" size="sm">
+            <Button variant="outline" size="md">
               <FolderGit2 className="w-4 h-4 mr-1.5" /> Open Full Workspace
             </Button>
           </Link>
@@ -942,16 +980,49 @@ export function DashboardRoleActions({ user, project: initialProject, allProject
                               <p className="text-xs text-gray-700 bg-white p-2.5 rounded border border-gray-200">
                                 <strong>Proposal:</strong> {app.proposal}
                               </p>
-                              {(app.status === 'PENDING' || app.status === 'ACCEPTED') && (
+
+                              {/* Action row — only show buttons when not already rejected */}
+                              {app.status !== 'REJECTED' && (
                                 <div className="flex items-center gap-2 pt-1">
-                                  <Button
-                                    size="sm"
-                                    variant="primary"
-                                    isLoading={isAllocatingTeam}
-                                    onClick={() => handleAllocateTeam(p.id, app.id)}
-                                  >
-                                    {app.status === 'ACCEPTED' ? '✓ Allocated — Re-Allocate' : 'Accept Team & Allocate'}
-                                  </Button>
+                                  {app.status === 'ACCEPTED' ? (
+                                    // Already accepted — show confirmation badge + re-allocate option
+                                    <div className="flex items-center gap-2 w-full">
+                                      <span className="inline-flex items-center gap-1.5 text-xs font-medium text-emerald-700 bg-emerald-50 px-3 py-1.5 rounded-md border border-emerald-200">
+                                        <CheckCircle2 className="w-3.5 h-3.5" />
+                                        Team Accepted & Allocated
+                                      </span>
+                                      <Button
+                                        size="sm"
+                                        variant="outline"
+                                        isLoading={isAllocatingTeam}
+                                        onClick={() => handleAllocateTeam(p.id, app.id)}
+                                      >
+                                        Re-Allocate
+                                      </Button>
+                                    </div>
+                                  ) : (
+                                    // Pending — show Accept & Reject
+                                    <>
+                                      <Button
+                                        size="sm"
+                                        variant="primary"
+                                        isLoading={isAllocatingTeam}
+                                        onClick={() => handleAllocateTeam(p.id, app.id)}
+                                      >
+                                        <CheckCircle2 className="w-3.5 h-3.5 mr-1" />
+                                        Accept & Allocate
+                                      </Button>
+                                      <Button
+                                        size="sm"
+                                        variant="danger"
+                                        isLoading={isRejectingApp}
+                                        onClick={() => handleRejectApplication(p.id, app.id)}
+                                      >
+                                        <X className="w-3.5 h-3.5 mr-1" />
+                                        Reject
+                                      </Button>
+                                    </>
+                                  )}
                                 </div>
                               )}
                             </div>
